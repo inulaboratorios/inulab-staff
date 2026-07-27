@@ -2531,6 +2531,8 @@ const App = () => {
     const [audioActivado, setAudioActivado] = useState(false);
     const ultimaRevisionRef = useRef(null);
     const audioCtxRef = useRef(null);
+    const checkPedidosNuevosRef = useRef(null);
+    const pollWorkerRef = useRef(null);
 
     const unlockAudio = () => {
         try {
@@ -2634,7 +2636,28 @@ const App = () => {
         } catch (e) { console.error('Error checkPedidosNuevos:', e.message); }
     };
 
-    useEffect(() => { if (!auth) return; const t = setInterval(checkPedidosNuevos, 15000); return () => clearInterval(t); }, [auth]);
+    // Mantiene siempre la versión más reciente de checkPedidosNuevos accesible
+    // desde el worker (que vive fuera del ciclo de renders de React).
+    useEffect(() => { checkPedidosNuevosRef.current = checkPedidosNuevos; });
+
+    // El polling de "pedidos nuevos" corre dentro de un Web Worker en vez de un
+    // setInterval normal del hilo principal. Motivo: cuando la pestaña queda en
+    // segundo plano (cambias a otra pestaña, pero sigue abierta), Chrome frena
+    // muy fuerte los timers del hilo principal para ahorrar batería/CPU — con
+    // eso, el aviso y el sonido dejaban de sonar hasta volver a esta pestaña.
+    // Los Web Workers no sufren ese mismo frenado, así que el "tick" cada 15s
+    // sigue llegando puntual aunque estés en otra pestaña (el fetch a la API y
+    // el sonido siguen ejecutándose en el hilo principal, como siempre).
+    useEffect(() => {
+        if (!auth) return;
+        const workerCode = "setInterval(function(){ self.postMessage('tick'); }, 15000);";
+        const blob = new Blob([workerCode], { type: 'application/javascript' });
+        const blobUrl = URL.createObjectURL(blob);
+        const worker = new Worker(blobUrl);
+        worker.onmessage = () => { if (checkPedidosNuevosRef.current) checkPedidosNuevosRef.current(); };
+        pollWorkerRef.current = worker;
+        return () => { worker.terminate(); URL.revokeObjectURL(blobUrl); pollWorkerRef.current = null; };
+    }, [auth]);
 
     const loadOrders = async () => { try { const data = await api.getOrders(); const raw = Array.isArray(data) ? data : (data.orders || []); setOrders(raw.map(normalizeOrder)); } catch (e) { console.error('Error cargando pedidos:', e.message); } };
     const loadNightMode = async () => { try { const data = await api.getNightMode(); setNightMode(!!data?.active); } catch {} };
