@@ -1295,7 +1295,7 @@ const SeccionInicio = ({ orders, user, onGoTo }) => {
                             <i className="fas fa-hourglass-half text-white text-sm"></i>
                             <span className="text-white font-semibold text-sm">Pendientes</span>
                             {pending.length>0&&<span className="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full">{pending.length}</span>}
-                            {pending.length>2&&<button onClick={()=>onGoTo('pedidos')} className="ml-auto w-7 h-7 rounded-full flex items-center justify-center bg-white/20 active:bg-white/30"><i className="fas fa-chevron-left text-white text-xs"></i></button>}
+                            {pending.length>2&&<button onClick={()=>onGoTo('pedidos')} className="ml-auto w-7 h-7 rounded-full flex items-center justify-center bg-white/20 active:bg-white/30"><i className="fas fa-chevron-right text-white text-xs"></i></button>}
                         </div>
                     </div>
                 </div>
