@@ -1307,7 +1307,7 @@ const SeccionPedidos = ({ orders, onStatusChange, onSuccess, onRefresh }) => {
                         <button onClick={()=>setTab('pending')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${tab==='pending'?'bg-white text-blue-700':'text-white/80'}`}>Pendientes{pending.length>0&&<span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${tab==='pending'?'bg-red-500 text-white':'bg-white/30 text-white'}`}>{pending.length}</span>}</button>
                         <button onClick={()=>setTab('completed')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${tab==='completed'?'bg-white text-blue-700':'text-white/80'}`}><i className="fas fa-history mr-1"></i>Historial</button>
                     </div>
-                    <button onClick={()=>setShowSearch(s=>!s)} className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ml-auto ${showSearch?'bg-white text-blue-700':'bg-white/20 text-white'}`}><i className="fas fa-search text-xs"></i></button>
+                    <button onClick={()=>setShowSearch(s=>!s)} className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ml-auto ${showSearch?'bg-white text-blue-700':'bg-white/20 text-white'}`}><i className={`fas ${showSearch?'fa-times':'fa-search'} text-xs`}></i></button>
                 </div>
                 {showSearch && (
                     <div className="relative">
@@ -1473,7 +1473,7 @@ const SeccionPacientes = ({ orders }) => {
                 <div className="flex items-center gap-3">
                     <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0"><i className="fas fa-paw text-white"></i></div>
                     <span className="text-white font-bold flex-1">Pacientes</span>
-                    <button onClick={()=>setShowSearchPacientes(s=>!s)} className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${showSearchPacientes?'bg-white text-emerald-700':'bg-white/20 text-white'}`}><i className="fas fa-search text-xs"></i></button>
+                    <button onClick={()=>setShowSearchPacientes(s=>!s)} className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${showSearchPacientes?'bg-white text-emerald-700':'bg-white/20 text-white'}`}><i className={`fas ${showSearchPacientes?'fa-times':'fa-search'} text-xs`}></i></button>
                 </div>
                 {showSearchPacientes && (
                     <div className="relative">
@@ -1586,7 +1586,7 @@ const SeccionResultados = ({ orders }) => {
                 <div className="flex items-center gap-3">
                     <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0"><i className="fas fa-file-medical text-white"></i></div>
                     <span className="text-white font-bold flex-1">Resultados</span>
-                    <button onClick={()=>setShowSearchResultados(s=>!s)} className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${showSearchResultados?'bg-white text-purple-700':'bg-white/20 text-white'}`}><i className="fas fa-search text-xs"></i></button>
+                    <button onClick={()=>setShowSearchResultados(s=>!s)} className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${showSearchResultados?'bg-white text-purple-700':'bg-white/20 text-white'}`}><i className={`fas ${showSearchResultados?'fa-times':'fa-search'} text-xs`}></i></button>
                 </div>
                 {showSearchResultados && (
                     <div className="relative">
@@ -1871,7 +1871,7 @@ const SeccionFacturacion = ({ orders, onRefresh }) => {
                 <div className="flex items-center gap-3">
                     <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0"><i className="fas fa-file-invoice-dollar text-white"></i></div>
                     <span className="text-white font-bold flex-1">Facturación</span>
-                    <button onClick={()=>setShowSearchFacturacion(s=>!s)} className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${showSearchFacturacion?'bg-white text-amber-700':'bg-white/20 text-white'}`}><i className="fas fa-search text-xs"></i></button>
+                    <button onClick={()=>setShowSearchFacturacion(s=>!s)} className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${showSearchFacturacion?'bg-white text-amber-700':'bg-white/20 text-white'}`}><i className={`fas ${showSearchFacturacion?'fa-times':'fa-search'} text-xs`}></i></button>
                 </div>
                 {showSearchFacturacion && (
                     <div className="relative">
