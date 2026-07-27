@@ -1303,10 +1303,10 @@ const SeccionPedidos = ({ orders, onStatusChange, onSuccess, onRefresh }) => {
                     <button onClick={onRefresh} className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-white flex-shrink-0"><i className="fas fa-sync-alt text-xs"></i></button>
                     <button onClick={()=>setShowSearch(s=>!s)} className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${showSearch?'bg-white text-blue-700':'bg-white/20 text-white'}`}><i className={`fas ${showSearch?'fa-times':'fa-search'} text-xs`}></i></button>
                 </div>
-                {showSearch && (<>
+                <div className="overflow-hidden transition-all ease-in-out" style={{maxHeight:showSearch?'500px':'0px',opacity:showSearch?1:0,transitionDuration:'450ms'}}>
                 <div className="relative">
                     <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                    <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar..." className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white/90 border-0 text-gray-800 text-xs focus:outline-none"/>
+                    <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar por dueño, mascota o examen..." className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white/90 border-0 text-gray-800 text-xs focus:outline-none"/>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="flex bg-white/20 rounded-xl p-1 gap-1 flex-shrink-0">
@@ -1314,7 +1314,7 @@ const SeccionPedidos = ({ orders, onStatusChange, onSuccess, onRefresh }) => {
                         <button onClick={()=>setTab('completed')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${tab==='completed'?'bg-white text-blue-700':'text-white/80'}`}><i className="fas fa-history mr-1"></i>Historial</button>
                     </div>
                 </div>
-                </>)}
+                </div>
             </div>
             <div className="hidden md:block flex-shrink-0 bg-white border-b border-gray-200 p-4">
                 <div className="flex items-center gap-3 flex-wrap">
@@ -1475,10 +1475,10 @@ const SeccionPacientes = ({ orders }) => {
                     <span className="text-white font-bold flex-1">Pacientes</span>
                     <button onClick={()=>setShowSearchPacientes(s=>!s)} className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${showSearchPacientes?'bg-white text-emerald-700':'bg-white/20 text-white'}`}><i className={`fas ${showSearchPacientes?'fa-times':'fa-search'} text-xs`}></i></button>
                 </div>
-                {showSearchPacientes && (<>
+                <div className="overflow-hidden transition-all ease-in-out" style={{maxHeight:showSearchPacientes?'500px':'0px',opacity:showSearchPacientes?1:0,transitionDuration:'450ms'}}>
                 <div className="relative">
                     <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                    <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar..." className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white/90 border-0 text-gray-800 text-xs focus:outline-none"/>
+                    <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar por mascota o dueño..." className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white/90 border-0 text-gray-800 text-xs focus:outline-none"/>
                 </div>
                 <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
                     <select value={filterDayP} onChange={e=>setFilterDayP(e.target.value)} className="px-2 py-1.5 rounded-lg bg-white/90 border-0 text-gray-700 text-xs focus:outline-none flex-shrink-0">
@@ -1491,7 +1491,7 @@ const SeccionPacientes = ({ orders }) => {
                         <option value="">Año</option>{yearsP.map(y=><option key={y} value={String(y)}>{y}</option>)}
                     </select>
                 </div>
-                </>)}
+                </div>
             </div>
             <div className="hidden md:block flex-shrink-0 bg-white border-b border-gray-200 p-4">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -1588,10 +1588,10 @@ const SeccionResultados = ({ orders }) => {
                     <span className="text-white font-bold flex-1">Resultados</span>
                     <button onClick={()=>setShowSearchResultados(s=>!s)} className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${showSearchResultados?'bg-white text-purple-700':'bg-white/20 text-white'}`}><i className={`fas ${showSearchResultados?'fa-times':'fa-search'} text-xs`}></i></button>
                 </div>
-                {showSearchResultados && (<>
+                <div className="overflow-hidden transition-all ease-in-out" style={{maxHeight:showSearchResultados?'500px':'0px',opacity:showSearchResultados?1:0,transitionDuration:'450ms'}}>
                 <div className="relative">
                     <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                    <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar..." className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white/90 border-0 text-gray-800 text-xs focus:outline-none"/>
+                    <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar por examen, mascota o cliente..." className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white/90 border-0 text-gray-800 text-xs focus:outline-none"/>
                 </div>
                 <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
                     <select value={filterDay} onChange={e=>setFilterDay(e.target.value)} className="px-2 py-1.5 rounded-lg bg-white/90 border-0 text-gray-700 text-xs focus:outline-none flex-shrink-0">
@@ -1605,7 +1605,7 @@ const SeccionResultados = ({ orders }) => {
                     </select>
                     {anyFilter && <button onClick={()=>{setSearch('');setFilterDay('');setFilterMonth('');setFilterYear('');}} className="px-2 py-1.5 rounded-lg bg-white/90 text-red-600 text-xs font-semibold flex-shrink-0"><i className="fas fa-times mr-1"></i>Limpiar</button>}
                 </div>
-                </>)}
+                </div>
                 {anyFilter && <p className="text-xs text-white/90 font-medium"><i className="fas fa-filter mr-1"></i>{filtered.length} de {allExams.length} resultados</p>}
             </div>
             <div className="hidden md:block flex-shrink-0 bg-white border-b border-gray-200 p-4">
@@ -1873,10 +1873,10 @@ const SeccionFacturacion = ({ orders, onRefresh }) => {
                     <span className="text-white font-bold flex-1">Facturación</span>
                     <button onClick={()=>setShowSearchFacturacion(s=>!s)} className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${showSearchFacturacion?'bg-white text-amber-700':'bg-white/20 text-white'}`}><i className={`fas ${showSearchFacturacion?'fa-times':'fa-search'} text-xs`}></i></button>
                 </div>
-                {showSearchFacturacion && (<>
+                <div className="overflow-hidden transition-all ease-in-out" style={{maxHeight:showSearchFacturacion?'500px':'0px',opacity:showSearchFacturacion?1:0,transitionDuration:'450ms'}}>
                 <div className="relative">
                     <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                    <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar..." className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white/90 border-0 text-gray-800 text-xs focus:outline-none"/>
+                    <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar por cliente..." className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white/90 border-0 text-gray-800 text-xs focus:outline-none"/>
                 </div>
                 <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
                     <button onClick={()=>setFacSubTab('entregadas')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex-shrink-0 ${facSubTab==='entregadas'?'bg-white text-amber-700':'bg-white/20 text-white'}`}>Entregadas</button>
@@ -1892,7 +1892,7 @@ const SeccionFacturacion = ({ orders, onRefresh }) => {
                     </select>
                     {anyFilter && <button onClick={()=>{setSearch('');setFilterDay('');setFilterMonth('');setFilterYear('');}} className="px-2 py-1.5 rounded-lg bg-white/90 text-red-600 text-xs font-semibold flex-shrink-0"><i className="fas fa-times mr-1"></i>Limpiar</button>}
                 </div>
-                </>)}
+                </div>
                 {anyFilter && <p className="text-xs text-white/90 font-medium"><i className="fas fa-filter mr-1"></i>{filtered.length} de {invoices.length} comprobantes</p>}
             </div>
             <div className="hidden md:block flex-shrink-0 bg-white border-b border-gray-200 p-4">
@@ -2121,7 +2121,7 @@ const SeccionCatalogo = () => {
                     <span className="text-white font-bold flex-1">Catálogo</span>
                     <button onClick={()=>setShowControlsCatalogo(s=>!s)} className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${showControlsCatalogo?'bg-white text-indigo-700':'bg-white/20 text-white'}`}><i className={`fas ${showControlsCatalogo?'fa-times':'fa-search'} text-xs`}></i></button>
                 </div>
-                {showControlsCatalogo && (<>
+                <div className="overflow-hidden transition-all ease-in-out" style={{maxHeight:showControlsCatalogo?'500px':'0px',opacity:showControlsCatalogo?1:0,transitionDuration:'450ms'}}>
                 <div className="flex items-center gap-1.5">
                     {[{k:'medico',label:'Médicos'},{k:'dueno',label:'Dueños'}].map(({k,label}) => (
                         <button key={k} onClick={() => setFiltro(k)}
@@ -2131,7 +2131,7 @@ const SeccionCatalogo = () => {
                     ))}
                     <div className="relative flex-1 min-w-0">
                         <i className="fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                        <input value={buscar} onChange={e => setBuscar(e.target.value)} placeholder="Buscar..." className="w-full pl-7 pr-2 py-1.5 rounded-xl bg-white/90 border-0 text-gray-800 text-xs focus:outline-none"/>
+                        <input value={buscar} onChange={e => setBuscar(e.target.value)} placeholder="Buscar examen o categoría..." className="w-full pl-7 pr-2 py-1.5 rounded-xl bg-white/90 border-0 text-gray-800 text-xs focus:outline-none"/>
                     </div>
                     {!modoEdicion ? (
                         <button onClick={() => setModoEdicion(true)} className="px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 bg-white/90 text-indigo-700 flex-shrink-0"><i className="fas fa-edit"></i>Editar</button>
@@ -2143,7 +2143,7 @@ const SeccionCatalogo = () => {
                         </>
                     )}
                 </div>
-                </>)}
+                </div>
                 {modoEdicion && (
                     <div className="bg-white/15 rounded-xl px-3 py-2 flex items-center gap-2">
                         <i className="fas fa-pencil-alt text-white text-xs"></i>
