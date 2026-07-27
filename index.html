@@ -46,11 +46,13 @@
         html {
             overflow: hidden;
             height: 100%;
+            position: fixed;
             width: 100%;
         }
         body {
             overflow: hidden;
             height: 100%;
+            position: fixed;
             width: 100%;
         }
         #root {
@@ -196,7 +198,6 @@
             <style>@keyframes ld{from{transform:translateX(-100%)}to{transform:translateX(100%)}}</style>
         </div>
     </div>
-    <div id="modal-portal-root"></div>
     <script type="text/babel" data-presets="react">
 
 const { useState, useEffect, useRef } = React;
@@ -697,22 +698,6 @@ const PdfViewer = ({ title, subtitle, icon, pdfUrl, date, orderId, userId, clien
 };
 
 
-// ── MODAL PORTAL — saca los modales fuera del árbol de la app (a <body>) ──
-// Esto evita que un modal "fixed" quede atrapado/encajonado dentro de contenedores
-// con scroll propio (header/franja arriba, barra inferior abajo tapándolo).
-const ModalPortal = ({ children }) => {
-    const [node] = useState(() => {
-        let el = document.getElementById('modal-portal-root');
-        if (!el) {
-            el = document.createElement('div');
-            el.id = 'modal-portal-root';
-            document.body.appendChild(el);
-        }
-        return el;
-    });
-    return ReactDOM.createPortal(children, node);
-};
-
 // ── PDF MODAL (alias para compatibilidad - renderiza dentro del layout) ──────
 const PdfModal = ({ title, subtitle, icon, pdfUrl, date, orderId, userId, clientName, examName, petName, onClose }) => {
     return (
@@ -732,7 +717,6 @@ const UploadResultsModal = ({ order, onClose, onSuccess }) => {
         setLoading(false);
     };
     return (
-        <ModalPortal>
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
             <div className="bg-white rounded-2xl w-full max-w-lg border border-gray-200 shadow-2xl max-h-[90vh] flex flex-col">
                 <div className="p-5 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
@@ -762,7 +746,6 @@ const UploadResultsModal = ({ order, onClose, onSuccess }) => {
                 </div>
             </div>
         </div>
-        </ModalPortal>
     );
 };
 
@@ -775,7 +758,6 @@ const InvoiceModal = ({ order, onClose, onSuccess }) => {
         setLoading(false);
     };
     return (
-        <ModalPortal>
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
             <div className="bg-white rounded-2xl w-full max-w-md border border-gray-200 shadow-2xl">
                 <div className="p-5 border-b border-gray-200 flex items-center justify-between"><div><h2 className="text-gray-800 font-bold">Subir Comprobante</h2><p className="text-gray-600 text-sm">{order.userName}</p></div><button onClick={onClose} className="w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600"><i className="fas fa-times"></i></button></div>
@@ -797,7 +779,6 @@ const InvoiceModal = ({ order, onClose, onSuccess }) => {
                 </div>
             </div>
         </div>
-        </ModalPortal>
     );
 };
 
@@ -807,7 +788,6 @@ const AssignModal = ({ order, onClose, onAssign }) => {
     useEffect(() => { api.getMotorizados().then(data => setMotos(Array.isArray(data) ? data : [])).catch(() => setMotos([])); }, []);
     const assign = async () => { if (!selected) return; setLoading(true); try { await api.assignMotorizado(order.id, selected); onAssign('✅ Motorizado asignado correctamente'); onClose(); } catch (e) { alert('❌ Error: ' + e.message); } setLoading(false); };
     return (
-        <ModalPortal>
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
             <div className="bg-white rounded-2xl w-full max-w-md border border-gray-200 shadow-2xl">
                 <div className="p-5 border-b border-gray-200 flex items-center justify-between"><h2 className="text-gray-800 font-bold"><i className="fas fa-motorcycle mr-2 text-cyan-600"></i>Asignar Motorizado</h2><button onClick={onClose} className="w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600"><i className="fas fa-times"></i></button></div>
@@ -817,7 +797,6 @@ const AssignModal = ({ order, onClose, onAssign }) => {
                 <div className="p-5 border-t border-gray-200 flex gap-3"><button onClick={onClose} className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-sm font-semibold">Cancelar</button><button onClick={assign} disabled={!selected||loading} className="flex-1 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl text-sm font-bold disabled:opacity-50">{loading?'Asignando...':'Asignar'}</button></div>
             </div>
         </div>
-        </ModalPortal>
     );
 };
 
@@ -930,7 +909,6 @@ const WhatsAppButton = ({ userId }) => {
 const AntecedentesModal = ({ order, onClose }) => {
     const itemsConAntecedentes = (order.items || []).filter(it => it.antecedentes);
     return (
-        <ModalPortal>
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[300] p-4">
             <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-gray-200" style={{maxHeight:'85vh',display:'flex',flexDirection:'column'}}>
                 <div className="p-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
@@ -963,7 +941,6 @@ const AntecedentesModal = ({ order, onClose }) => {
                 </div>
             </div>
         </div>
-        </ModalPortal>
     );
 };
 
@@ -1005,7 +982,6 @@ const TrackingModal = ({ order, onClose, onCommentSaved }) => {
     };
 
     return (
-        <ModalPortal>
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[300] p-4">
             <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl border border-gray-200" style={{height:'85vh',display:'flex',flexDirection:'column'}}>
                 {/* Header */}
@@ -1024,9 +1000,9 @@ const TrackingModal = ({ order, onClose, onCommentSaved }) => {
                     </button>
                 </div>
                 {/* Body */}
-                <div className="flex flex-col md:flex-row gap-4 p-4 md:p-5 flex-1 min-h-0 overflow-y-auto md:overflow-visible hide-scrollbar">
+                <div className="flex gap-4 p-5 flex-1 min-h-0">
                     {/* Estado del pedido — scroll */}
-                    <div className="flex-1 bg-white rounded-2xl border border-gray-200 p-4 md:p-5 md:overflow-y-auto hide-scrollbar">
+                    <div className="flex-1 bg-white rounded-2xl border border-gray-200 p-5 overflow-y-auto hide-scrollbar">
                         <h3 className="font-bold text-gray-800 mb-4">Estado del pedido</h3>
                         <div>
                             {STEPS.map((step, idx) => {
@@ -1055,7 +1031,7 @@ const TrackingModal = ({ order, onClose, onCommentSaved }) => {
                         </div>
                     </div>
                     {/* Detalle + comentario del lab — fijo */}
-                    <div className="w-full md:w-80 md:flex-shrink-0 flex flex-col gap-3 md:overflow-y-auto hide-scrollbar">
+                    <div className="w-80 flex-shrink-0 flex flex-col gap-3 overflow-y-auto hide-scrollbar">
                         <div className="bg-white rounded-2xl border border-gray-200 p-4 flex flex-col gap-3">
                             <h3 className="font-bold text-gray-800 mb-1">Detalle del pedido</h3>
                             {order.items.map((it, i) => (
@@ -1137,7 +1113,6 @@ const TrackingModal = ({ order, onClose, onCommentSaved }) => {
                 </div>
             </div>
         </div>
-        </ModalPortal>
     );
 };
 
@@ -1256,12 +1231,7 @@ const SeccionInicio = ({ orders, user, onGoTo }) => {
             <h1 className="text-2xl font-bold text-gray-800 mb-0.5">¡Hola, {user?.username || 'Admin'}!</h1>
             <p className="text-gray-600 text-sm mb-6">Resumen de tu actividad</p>
             <div className="mb-6">
-                <div className="md:hidden mb-3 rounded-2xl p-4 bg-gradient-to-r from-amber-500 to-amber-700 shadow-lg flex items-center gap-3">
-                    <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0"><i className="fas fa-hourglass-half text-white"></i></div>
-                    <span className="text-white font-bold flex-1">Pendientes{pending.length>0&&<span className="ml-2 bg-white/25 text-white text-xs px-2 py-0.5 rounded-full">{pending.length}</span>}</span>
-                    {pending.length>2&&<button onClick={()=>onGoTo('pedidos')} className="text-white text-xs font-semibold underline">Ver todos →</button>}
-                </div>
-                <div className="hidden md:flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-3">
                     <h2 className="text-base font-bold text-gray-800 flex items-center gap-2">⏳ Pendientes{pending.length>0&&<span className="bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{pending.length}</span>}</h2>
                     {pending.length>2&&<button onClick={()=>onGoTo('pedidos')} className="text-cyan-600 text-sm hover:text-cyan-700 font-medium">Ver todos →</button>}
                 </div>
@@ -1295,25 +1265,7 @@ const SeccionPedidos = ({ orders, onStatusChange, onSuccess, onRefresh }) => {
     const list = (tab==='pending'?pending:completed).filter(o => !search||o.userName.toLowerCase().includes(search.toLowerCase())||o.items.some(it=>it.exam?.name?.toLowerCase().includes(search.toLowerCase())||it.pet?.name?.toLowerCase().includes(search.toLowerCase())));
     return (
         <div className="flex flex-col h-full">
-            {/* Recuadro de color con todos los controles — solo móvil */}
-            <div className="md:hidden mx-4 mt-3 mb-1 rounded-2xl p-4 bg-gradient-to-r from-blue-500 to-blue-700 shadow-lg flex flex-col gap-3 flex-shrink-0">
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0"><i className="fas fa-clipboard-list text-white"></i></div>
-                    <span className="text-white font-bold flex-1">Pedidos</span>
-                    <button onClick={onRefresh} className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-white flex-shrink-0"><i className="fas fa-sync-alt text-xs"></i></button>
-                </div>
-                <div className="flex items-center gap-2">
-                    <div className="flex bg-white/20 rounded-xl p-1 gap-1 flex-shrink-0">
-                        <button onClick={()=>setTab('pending')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${tab==='pending'?'bg-white text-blue-700':'text-white/80'}`}>Pendientes{pending.length>0&&<span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${tab==='pending'?'bg-red-500 text-white':'bg-white/30 text-white'}`}>{pending.length}</span>}</button>
-                        <button onClick={()=>setTab('completed')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${tab==='completed'?'bg-white text-blue-700':'text-white/80'}`}><i className="fas fa-history mr-1"></i>Historial</button>
-                    </div>
-                    <div className="relative flex-1 min-w-0">
-                        <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar..." className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white/90 border-0 text-gray-800 text-xs focus:outline-none"/>
-                    </div>
-                </div>
-            </div>
-            <div className="hidden md:block flex-shrink-0 bg-white border-b border-gray-200 p-4">
+            <div className="flex-shrink-0 bg-white border-b border-gray-200 p-4">
                 <div className="flex items-center gap-3 flex-wrap">
                     <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
                         <button onClick={()=>setTab('pending')} className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${tab==='pending'?'bg-blue-600 text-white':'text-gray-700 hover:text-gray-900'}`}>Pendientes{pending.length>0&&<span className="ml-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">{pending.length}</span>}</button>
@@ -1464,29 +1416,7 @@ const SeccionPacientes = ({ orders }) => {
 
     return (
         <div className="flex flex-col h-full">
-            {/* Recuadro de color con todos los controles — solo móvil */}
-            <div className="md:hidden mx-4 mt-3 mb-1 rounded-2xl p-4 bg-gradient-to-r from-emerald-500 to-emerald-700 shadow-lg flex flex-col gap-3 flex-shrink-0">
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0"><i className="fas fa-paw text-white"></i></div>
-                    <span className="text-white font-bold flex-1">Pacientes</span>
-                </div>
-                <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
-                    <div className="relative flex-1 min-w-0">
-                        <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar..." className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white/90 border-0 text-gray-800 text-xs focus:outline-none"/>
-                    </div>
-                    <select value={filterDayP} onChange={e=>setFilterDayP(e.target.value)} className="px-2 py-1.5 rounded-lg bg-white/90 border-0 text-gray-700 text-xs focus:outline-none flex-shrink-0">
-                        <option value="">Día</option>{diasP.map(d=><option key={d} value={d}>{d}</option>)}
-                    </select>
-                    <select value={filterMonthP} onChange={e=>setFilterMonthP(e.target.value)} className="px-2 py-1.5 rounded-lg bg-white/90 border-0 text-gray-700 text-xs focus:outline-none flex-shrink-0">
-                        <option value="">Mes</option>{mesesP.map((m,i)=><option key={i} value={String(i+1).padStart(2,'0')}>{m}</option>)}
-                    </select>
-                    <select value={filterYearP} onChange={e=>setFilterYearP(e.target.value)} className="px-2 py-1.5 rounded-lg bg-white/90 border-0 text-gray-700 text-xs focus:outline-none flex-shrink-0">
-                        <option value="">Año</option>{yearsP.map(y=><option key={y} value={String(y)}>{y}</option>)}
-                    </select>
-                </div>
-            </div>
-            <div className="hidden md:block flex-shrink-0 bg-white border-b border-gray-200 p-4">
+            <div className="flex-shrink-0 bg-white border-b border-gray-200 p-4">
                 <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-emerald-600 font-semibold text-sm flex items-center gap-2 mr-1"><i className="fas fa-paw"></i>Pacientes</span>
                     <div className="relative flex-1 min-w-36">
@@ -1573,31 +1503,7 @@ const SeccionResultados = ({ orders }) => {
 
     return (
         <div className="flex flex-col h-full relative">
-            {/* Recuadro de color con todos los controles — solo móvil */}
-            <div className="md:hidden mx-4 mt-3 mb-1 rounded-2xl p-4 bg-gradient-to-r from-purple-500 to-purple-700 shadow-lg flex flex-col gap-3 flex-shrink-0">
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0"><i className="fas fa-file-medical text-white"></i></div>
-                    <span className="text-white font-bold flex-1">Resultados</span>
-                </div>
-                <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
-                    <div className="relative flex-1 min-w-0">
-                        <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar..." className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white/90 border-0 text-gray-800 text-xs focus:outline-none"/>
-                    </div>
-                    <select value={filterDay} onChange={e=>setFilterDay(e.target.value)} className="px-2 py-1.5 rounded-lg bg-white/90 border-0 text-gray-700 text-xs focus:outline-none flex-shrink-0">
-                        <option value="">Día</option>{dias.map(d=><option key={d} value={d}>{d}</option>)}
-                    </select>
-                    <select value={filterMonth} onChange={e=>setFilterMonth(e.target.value)} className="px-2 py-1.5 rounded-lg bg-white/90 border-0 text-gray-700 text-xs focus:outline-none flex-shrink-0">
-                        <option value="">Mes</option>{meses.map((m,i)=><option key={i} value={String(i+1).padStart(2,'0')}>{m}</option>)}
-                    </select>
-                    <select value={filterYear} onChange={e=>setFilterYear(e.target.value)} className="px-2 py-1.5 rounded-lg bg-white/90 border-0 text-gray-700 text-xs focus:outline-none flex-shrink-0">
-                        <option value="">Año</option>{years.map(y=><option key={y} value={String(y)}>{y}</option>)}
-                    </select>
-                    {anyFilter && <button onClick={()=>{setSearch('');setFilterDay('');setFilterMonth('');setFilterYear('');}} className="px-2 py-1.5 rounded-lg bg-white/90 text-red-600 text-xs font-semibold flex-shrink-0"><i className="fas fa-times mr-1"></i>Limpiar</button>}
-                </div>
-                {anyFilter && <p className="text-xs text-white/90 font-medium"><i className="fas fa-filter mr-1"></i>{filtered.length} de {allExams.length} resultados</p>}
-            </div>
-            <div className="hidden md:block flex-shrink-0 bg-white border-b border-gray-200 p-4">
+            <div className="flex-shrink-0 bg-white border-b border-gray-200 p-4">
                 <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-purple-600 font-semibold text-sm flex items-center gap-2 mr-1"><i className="fas fa-file-medical"></i>Resultados</span>
                     <div className="relative flex-1 min-w-36">
@@ -1787,7 +1693,6 @@ const SeccionPorConsolidar = ({ onSuccess, onBack }) => {
                     ))}
                 </div>
                 {showModal && (
-                    <ModalPortal>
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
                         <div className="bg-white rounded-2xl w-full max-w-md border border-gray-200 shadow-2xl">
                             <div className="p-5 border-b border-gray-200 flex items-center justify-between">
@@ -1815,7 +1720,6 @@ const SeccionPorConsolidar = ({ onSuccess, onBack }) => {
                             </div>
                         </div>
                     </div>
-                    </ModalPortal>
                 )}
             </div>
         );
@@ -1854,33 +1758,7 @@ const SeccionFacturacion = ({ orders, onRefresh }) => {
 
     return (
         <div className="flex flex-col h-full relative">
-            {/* Recuadro de color con todos los controles — solo móvil */}
-            <div className="md:hidden mx-4 mt-3 mb-1 rounded-2xl p-4 bg-gradient-to-r from-amber-500 to-amber-700 shadow-lg flex flex-col gap-3 flex-shrink-0">
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0"><i className="fas fa-file-invoice-dollar text-white"></i></div>
-                    <span className="text-white font-bold flex-1">Facturación</span>
-                </div>
-                <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
-                    <button onClick={()=>setFacSubTab('entregadas')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex-shrink-0 ${facSubTab==='entregadas'?'bg-white text-amber-700':'bg-white/20 text-white'}`}>Entregadas</button>
-                    <button onClick={()=>setFacSubTab('diferidas')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex-shrink-0 ${facSubTab==='diferidas'?'bg-white text-violet-700':'bg-white/20 text-white'}`}>Diferidas</button>
-                    <div className="relative flex-shrink-0" style={{width:'120px'}}>
-                        <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar..." className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white/90 border-0 text-gray-800 text-xs focus:outline-none"/>
-                    </div>
-                    <select value={filterDay} onChange={e=>setFilterDay(e.target.value)} className="px-2 py-1.5 rounded-lg bg-white/90 border-0 text-gray-700 text-xs focus:outline-none flex-shrink-0">
-                        <option value="">Día</option>{dias.map(d=><option key={d} value={d}>{d}</option>)}
-                    </select>
-                    <select value={filterMonth} onChange={e=>setFilterMonth(e.target.value)} className="px-2 py-1.5 rounded-lg bg-white/90 border-0 text-gray-700 text-xs focus:outline-none flex-shrink-0">
-                        <option value="">Mes</option>{meses.map((m,i)=><option key={i} value={String(i+1).padStart(2,'0')}>{m}</option>)}
-                    </select>
-                    <select value={filterYear} onChange={e=>setFilterYear(e.target.value)} className="px-2 py-1.5 rounded-lg bg-white/90 border-0 text-gray-700 text-xs focus:outline-none flex-shrink-0">
-                        <option value="">Año</option>{years.map(y=><option key={y} value={String(y)}>{y}</option>)}
-                    </select>
-                    {anyFilter && <button onClick={()=>{setSearch('');setFilterDay('');setFilterMonth('');setFilterYear('');}} className="px-2 py-1.5 rounded-lg bg-white/90 text-red-600 text-xs font-semibold flex-shrink-0"><i className="fas fa-times mr-1"></i>Limpiar</button>}
-                </div>
-                {anyFilter && <p className="text-xs text-white/90 font-medium"><i className="fas fa-filter mr-1"></i>{filtered.length} de {invoices.length} comprobantes</p>}
-            </div>
-            <div className="hidden md:block flex-shrink-0 bg-white border-b border-gray-200 p-4">
+            <div className="flex-shrink-0 bg-white border-b border-gray-200 p-4">
 
                 <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-amber-600 font-semibold text-sm flex items-center gap-2 mr-1"><i className="fas fa-file-invoice-dollar"></i>Facturación</span>
@@ -2098,43 +1976,8 @@ const SeccionCatalogo = () => {
 
     return (
         <div className="flex flex-col h-full">
-            {/* Recuadro de color con todos los controles — solo móvil */}
-            <div className="md:hidden mx-4 mt-3 mb-1 rounded-2xl p-4 bg-gradient-to-r from-indigo-500 to-indigo-700 shadow-lg flex flex-col gap-3 flex-shrink-0">
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0"><i className="fas fa-list-alt text-white"></i></div>
-                    <span className="text-white font-bold flex-1">Catálogo</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                    {[{k:'medico',label:'Médicos'},{k:'dueno',label:'Dueños'}].map(({k,label}) => (
-                        <button key={k} onClick={() => setFiltro(k)}
-                            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex-shrink-0 ${filtro===k?'bg-white text-indigo-700':'bg-white/20 text-white'}`}>
-                            {label}
-                        </button>
-                    ))}
-                    <div className="relative flex-1 min-w-0">
-                        <i className="fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                        <input value={buscar} onChange={e => setBuscar(e.target.value)} placeholder="Buscar..." className="w-full pl-7 pr-2 py-1.5 rounded-xl bg-white/90 border-0 text-gray-800 text-xs focus:outline-none"/>
-                    </div>
-                    {!modoEdicion ? (
-                        <button onClick={() => setModoEdicion(true)} className="px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 bg-white/90 text-indigo-700 flex-shrink-0"><i className="fas fa-edit"></i>Editar</button>
-                    ) : (
-                        <>
-                            <button onClick={() => { setForm(f => ({ ...f, categoria: '', tipo: filtro })); setShowForm(true); }} className="px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 bg-white/90 text-indigo-700 flex-shrink-0"><i className="fas fa-folder-plus"></i></button>
-                            <button onClick={cancelarEdicion} className="px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 bg-white/20 text-white flex-shrink-0"><i className="fas fa-times"></i></button>
-                            <button onClick={guardar} disabled={guardando} className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 flex-shrink-0 ${cambios>0?'bg-green-500 text-white':'bg-white/20 text-white/60'}`}><i className="fas fa-save"></i>{guardando ? '...' : (cambios>0?`(${cambios})`:'')}</button>
-                        </>
-                    )}
-                </div>
-                {modoEdicion && (
-                    <div className="bg-white/15 rounded-xl px-3 py-2 flex items-center gap-2">
-                        <i className="fas fa-pencil-alt text-white text-xs"></i>
-                        <p className="text-white text-xs font-medium flex-1">Modo edición activo</p>
-                        {cambios > 0 && <span className="bg-white/25 text-white text-xs px-2 py-0.5 rounded-full font-bold">{cambios} cambios</span>}
-                    </div>
-                )}
-            </div>
             {/* Barra superior */}
-            <div className="hidden md:block flex-shrink-0 bg-white border-b border-gray-200 p-4">
+            <div className="flex-shrink-0 bg-white border-b border-gray-200 p-4">
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-3 flex-wrap">
                         <span className="text-indigo-600 font-semibold text-sm flex items-center gap-2"><i className="fas fa-list-alt"></i>Catálogo</span>
@@ -2291,7 +2134,6 @@ const SeccionCatalogo = () => {
 
             {/* Modal agregar examen */}
             {showForm && (
-                <ModalPortal>
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
                     <div className="bg-white rounded-2xl w-full max-w-md border border-gray-200 shadow-2xl">
                         <div className="p-5 border-b border-gray-200 flex items-center justify-between"><h2 className="text-gray-800 font-bold"><i className="fas fa-plus-circle mr-2 text-indigo-600"></i>Nuevo Examen</h2><button onClick={() => setShowForm(false)} className="w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600"><i className="fas fa-times"></i></button></div>
@@ -2312,12 +2154,10 @@ const SeccionCatalogo = () => {
                         </div>
                     </div>
                 </div>
-                </ModalPortal>
             )}
 
             {/* Modal confirmar eliminar */}
             {confirm && (
-                <ModalPortal>
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
                     <div className="bg-white rounded-2xl w-full max-w-sm border border-gray-200 shadow-2xl p-6 text-center">
                         <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4"><i className="fas fa-trash-alt text-red-500 text-2xl"></i></div>
@@ -2326,7 +2166,6 @@ const SeccionCatalogo = () => {
                         <div className="flex gap-3"><button onClick={() => setConfirm(null)} className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-sm font-semibold">Cancelar</button><button onClick={() => deleteExamen(confirm)} className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold">Eliminar</button></div>
                     </div>
                 </div>
-                </ModalPortal>
             )}
         </div>
     );
@@ -2540,15 +2379,9 @@ const SeccionUsuarios = ({ currentUser }) => {
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            {/* Recuadro de color con boton de accion — solo móvil */}
-            <div className="md:hidden mx-4 mt-3 mb-1 rounded-2xl p-4 bg-gradient-to-r from-rose-500 to-rose-700 shadow-lg flex items-center gap-3 flex-shrink-0">
-                <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0"><i className="fas fa-users text-white"></i></div>
-                <span className="text-white font-bold flex-1">Usuarios</span>
-                <button onClick={()=>{setShowForm(true);setErr('');setOk('');}} className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center text-white flex-shrink-0"><i className="fas fa-plus text-sm"></i></button>
-            </div>
             <div className="flex-1 overflow-y-auto p-6 hide-scrollbar">
                 <div className="max-w-lg">
-                    <div className="hidden md:flex items-center justify-between mb-6">
+                    <div className="flex items-center justify-between mb-6">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-800">Usuarios</h1>
                             <p className="text-gray-500 text-sm">Administra el equipo</p>
@@ -2584,7 +2417,6 @@ const SeccionUsuarios = ({ currentUser }) => {
 
             {/* Modal editar usuario */}
             {editUser && (
-                <ModalPortal>
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[300] p-4">
                     <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6">
                         <div className="flex items-center justify-between mb-5">
@@ -2615,12 +2447,10 @@ const SeccionUsuarios = ({ currentUser }) => {
                         </div>
                     </div>
                 </div>
-                </ModalPortal>
             )}
 
             {/* Modal confirmar eliminar */}
             {confirmDel && (
-                <ModalPortal>
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[300] p-4">
                     <div className="bg-white rounded-2xl w-full max-w-xs shadow-2xl p-6 text-center">
                         <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -2634,12 +2464,10 @@ const SeccionUsuarios = ({ currentUser }) => {
                         </div>
                     </div>
                 </div>
-                </ModalPortal>
             )}
 
             {/* Modal crear usuario */}
             {showForm && (
-                <ModalPortal>
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[300] p-4">
                     <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6">
                         <div className="flex items-center justify-between mb-5">
@@ -2681,7 +2509,6 @@ const SeccionUsuarios = ({ currentUser }) => {
                         </div>
                     </div>
                 </div>
-                </ModalPortal>
             )}
         </div>
     );
@@ -2704,6 +2531,8 @@ const App = () => {
     const [audioActivado, setAudioActivado] = useState(false);
     const ultimaRevisionRef = useRef(null);
     const audioCtxRef = useRef(null);
+    const checkPedidosNuevosRef = useRef(null);
+    const pollWorkerRef = useRef(null);
 
     const unlockAudio = () => {
         try {
@@ -2807,7 +2636,28 @@ const App = () => {
         } catch (e) { console.error('Error checkPedidosNuevos:', e.message); }
     };
 
-    useEffect(() => { if (!auth) return; const t = setInterval(checkPedidosNuevos, 15000); return () => clearInterval(t); }, [auth]);
+    // Mantiene siempre la versión más reciente de checkPedidosNuevos accesible
+    // desde el worker (que vive fuera del ciclo de renders de React).
+    useEffect(() => { checkPedidosNuevosRef.current = checkPedidosNuevos; });
+
+    // El polling de "pedidos nuevos" corre dentro de un Web Worker en vez de un
+    // setInterval normal del hilo principal. Motivo: cuando la pestaña queda en
+    // segundo plano (cambias a otra pestaña, pero sigue abierta), Chrome frena
+    // muy fuerte los timers del hilo principal para ahorrar batería/CPU — con
+    // eso, el aviso y el sonido dejaban de sonar hasta volver a esta pestaña.
+    // Los Web Workers no sufren ese mismo frenado, así que el "tick" cada 15s
+    // sigue llegando puntual aunque estés en otra pestaña (el fetch a la API y
+    // el sonido siguen ejecutándose en el hilo principal, como siempre).
+    useEffect(() => {
+        if (!auth) return;
+        const workerCode = "setInterval(function(){ self.postMessage('tick'); }, 15000);";
+        const blob = new Blob([workerCode], { type: 'application/javascript' });
+        const blobUrl = URL.createObjectURL(blob);
+        const worker = new Worker(blobUrl);
+        worker.onmessage = () => { if (checkPedidosNuevosRef.current) checkPedidosNuevosRef.current(); };
+        pollWorkerRef.current = worker;
+        return () => { worker.terminate(); URL.revokeObjectURL(blobUrl); pollWorkerRef.current = null; };
+    }, [auth]);
 
     const loadOrders = async () => { try { const data = await api.getOrders(); const raw = Array.isArray(data) ? data : (data.orders || []); setOrders(raw.map(normalizeOrder)); } catch (e) { console.error('Error cargando pedidos:', e.message); } };
     const loadNightMode = async () => { try { const data = await api.getNightMode(); setNightMode(!!data?.active); } catch {} };
@@ -2829,10 +2679,10 @@ const App = () => {
         catch (e) { setSuccess('❌ Error: ' + e.message); setTimeout(() => setSuccess(''), 4000); }
     };
 
-    if (loading) return (<div className="flex items-center justify-center bg-gray-50" style={{position:'fixed',inset:0,height:'100dvh',overflow:'hidden'}}><div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-4 border-cyan-500 border-t-transparent mx-auto mb-4"></div><p className="text-gray-600 text-sm">Iniciando...</p></div></div>);
+    if (loading) return (<div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-4 border-cyan-500 border-t-transparent mx-auto mb-4"></div><p className="text-gray-600 text-sm">Iniciando...</p></div></div>);
 
     if (!auth) return (
-        <div className="flex items-center justify-center p-4" style={{position:'fixed',inset:0,height:'100dvh',overflow:'hidden',background:'linear-gradient(135deg,#ffffff 0%,#f0fffe 40%,#e6fafa 70%,#f8ffff 100%)'}}>
+        <div className="min-h-screen flex items-center justify-center p-4" style={{background:'linear-gradient(135deg,#ffffff 0%,#f0fffe 40%,#e6fafa 70%,#f8ffff 100%)'}}>
             <div className="w-full max-w-sm">
                 <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
                     <div className="text-center mb-6">
@@ -2869,7 +2719,7 @@ const App = () => {
     ];
 
     return (
-        <div className="bg-gray-100 flex flex-col" style={{height:'100dvh',overflow:'hidden'}}>
+        <div className="bg-gray-100 flex flex-col" style={{height:'100vh',overflow:'hidden'}}>
             {/* Toast de pedido nuevo */}
             {nuevoPedidoAlerta && (
                 <div className="fixed top-4 right-4 z-50 bg-white border border-cyan-200 shadow-lg rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer animate-pulse"
@@ -2884,24 +2734,24 @@ const App = () => {
                     </div>
                 </div>
             )}
-            {/* Header - estilo LATEST (responsive: menos padding y sin subtítulo en móvil) */}
-            <div className="bg-white border-b border-gray-200 px-3 md:px-6 py-2.5 md:py-3 flex items-center justify-between flex-shrink-0 shadow-sm">
+            {/* Header - estilo LATEST */}
+            <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between flex-shrink-0 shadow-sm">
                 <div className="flex items-center gap-2 cursor-pointer" onClick={()=>setView('inicio')}>
-                    <img src="logo_inulaboratorios.jpg" alt="Logo" className="h-9 w-9 md:h-11 md:w-11 object-contain rounded-full" onError={e=>{e.target.style.display='none';}}/>
-                    <span className="text-sm md:text-base font-light text-gray-700 tracking-wide hidden sm:block">INULABORATORIOS</span>
+                    <img src="logo_inulaboratorios.jpg" alt="Logo" className="h-11 w-11 object-contain rounded-full" onError={e=>{e.target.style.display='none';}}/>
+                    <span className="text-base font-light text-gray-700 tracking-wide hidden sm:block">INULABORATORIOS</span>
                 </div>
-                <div className="flex items-center gap-2 md:gap-4">
-                    <div className="text-right hidden xs:block">
-                        <p className="text-xs md:text-sm font-semibold text-gray-800">{user?.username||'Admin'}</p>
-                        <p className="text-xs text-gray-500 hidden md:block">Administrador</p>
+                <div className="flex items-center gap-4">
+                    <div className="text-right">
+                        <p className="text-sm font-semibold text-gray-800">{user?.username||'Admin'}</p>
+                        <p className="text-xs text-gray-500">Administrador</p>
                     </div>
-                    <button onClick={()=>setView('configuracion')} className="w-8 h-8 md:w-9 md:h-9 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600 border border-gray-200 transition-colors flex-shrink-0"><i className="fas fa-bars text-sm"></i></button>
+                    <button onClick={()=>setView('configuracion')} className="w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600 border border-gray-200 transition-colors"><i className="fas fa-bars text-sm"></i></button>
                 </div>
             </div>
             {/* Layout */}
             <div className="flex flex-1 min-h-0">
-                {/* Sidebar - estilo LATEST (solo escritorio, oculto en móvil) */}
-                <div className="hidden md:flex w-52 bg-white border-r border-gray-200 flex-col flex-shrink-0">
+                {/* Sidebar - estilo LATEST */}
+                <div className="w-52 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
                     <nav className="flex-1 p-3 space-y-1 overflow-y-auto hide-scrollbar">
                         {NAV.map(n => (
                             <button key={n.id} onClick={()=>setView(n.id)}
@@ -2939,28 +2789,12 @@ const App = () => {
                                             <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0">{(user?.username||'A')[0].toUpperCase()}</div>
                                             <div><p className="font-semibold text-gray-800">{user?.username||'Admin'}</p><p className="text-sm text-gray-500">INULABORATORIOS</p></div>
                                         </div>
-                                        <button onClick={handleLogout} className="w-full mt-4 flex items-center justify-center gap-2 text-sm text-red-600 hover:text-white hover:bg-red-600 border border-red-200 px-4 py-3 rounded-xl transition-colors font-medium">
-                                            <i className="fas fa-sign-out-alt"></i>Cerrar sesión
-                                        </button>
                                     </div>
                                 </div>
                             </div>
                         )}
                     </div>
                 </div>
-            </div>
-            {/* Barra inferior — solo móvil, deslizable horizontal con las 7 secciones */}
-            <div className="flex md:hidden flex-shrink-0 bg-white border-t border-gray-200 overflow-x-auto hide-scrollbar" style={{paddingBottom:'env(safe-area-inset-bottom, 0px)'}}>
-                {NAV.map(n => (
-                    <button key={n.id} onClick={()=>setView(n.id)}
-                        className="flex flex-col items-center justify-center gap-0.5 py-2 relative flex-shrink-0" style={{minWidth:'72px'}}>
-                        <div className="relative">
-                            <i className={`fas ${n.icon} text-lg ${view===n.id?n.color:'text-gray-400'}`}></i>
-                            {n.badge>0&&<span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center">{n.badge}</span>}
-                        </div>
-                        <span className={`text-[10px] font-medium whitespace-nowrap ${view===n.id?n.color:'text-gray-400'}`}>{n.label}</span>
-                    </button>
-                ))}
             </div>
         </div>
     );
