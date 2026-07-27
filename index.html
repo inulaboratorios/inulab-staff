@@ -1362,7 +1362,7 @@ const SeccionPedidos = ({ orders, onStatusChange, onSuccess, onRefresh }) => {
 
                 </div>
             </div>
-            <div className={`flex-1 overflow-y-auto pt-0 md:pt-4 px-4 pb-4 hide-scrollbar ${(showSearch&&!search)?'hidden':''}`}>
+            <div className={`flex-1 overflow-y-auto pt-3 md:pt-4 px-4 pb-4 hide-scrollbar ${(showSearch&&!search)?'hidden':''}`}>
                 {list.length===0?(<div className="flex flex-col items-center justify-center h-64"><i className={`fas ${tab==='pending'?'fa-inbox':'fa-history'} text-5xl mb-3 text-gray-300`}></i><p className="text-gray-600">{tab==='pending'?'Sin pedidos pendientes':'Sin pedidos completados'}</p></div>):(
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 pb-6">{list.map(o=><OrderCard key={o.id} order={o} onStatusChange={onStatusChange} onSuccess={onSuccess}/>)}</div>
                 )}
@@ -1476,7 +1476,7 @@ const SeccionPacientes = ({ orders }) => {
                         </select>
                     </div>
                 </div>
-                <div className="flex-1 overflow-y-auto pt-0 md:pt-4 px-4 pb-4 hide-scrollbar">
+                <div className="flex-1 overflow-y-auto pt-3 md:pt-4 px-4 pb-4 hide-scrollbar">
                     {filteredExams.length===0?(
                         <div className="text-center py-12 text-gray-400"><i className="fas fa-file-medical text-4xl mb-2 block"></i>Sin exámenes</div>
                     ):(
@@ -1550,7 +1550,7 @@ const SeccionPacientes = ({ orders }) => {
                     </select>
                 </div>
             </div>
-            <div className={`flex-1 overflow-y-auto pt-0 md:pt-4 px-4 pb-4 hide-scrollbar ${(showSearchPacientes&&!search&&!filterDayP&&!filterMonthP&&!filterYearP)?'hidden':''}`}>
+            <div className={`flex-1 overflow-y-auto pt-3 md:pt-4 px-4 pb-4 hide-scrollbar ${(showSearchPacientes&&!search&&!filterDayP&&!filterMonthP&&!filterYearP)?'hidden':''}`}>
                 {filteredWithDate.length===0?(
                     <div className="text-center py-12 text-gray-400"><i className="fas fa-paw text-4xl mb-2 block"></i>Sin pacientes</div>
                 ):(
@@ -1672,7 +1672,7 @@ const SeccionResultados = ({ orders }) => {
                 </div>
                 {anyFilter && <p className="text-xs text-purple-700 mt-2 font-medium"><i className="fas fa-filter mr-1"></i>{filtered.length} de {allExams.length} resultados</p>}
             </div>
-            <div className={`flex-1 overflow-y-auto pt-0 md:pt-4 px-4 pb-4 hide-scrollbar ${(showSearchResultados&&!search&&!filterDay&&!filterMonth&&!filterYear)?'hidden':''}`}>
+            <div className={`flex-1 overflow-y-auto pt-3 md:pt-4 px-4 pb-4 hide-scrollbar ${(showSearchResultados&&!search&&!filterDay&&!filterMonth&&!filterYear)?'hidden':''}`}>
                 {filtered.length===0?(
                     <div className="text-center py-12"><i className="fas fa-file-medical text-4xl mb-2 block text-gray-300"></i><p className="text-gray-600">Sin resultados</p></div>
                 ):(
@@ -1980,7 +1980,7 @@ const SeccionFacturacion = ({ orders, onRefresh }) => {
                     <p className="text-xs text-amber-700 mt-2 font-medium"><i className="fas fa-filter mr-1"></i>{filtered.length} de {invoices.length} comprobantes</p>
                 )}
             </div>
-            <div className={`flex-1 overflow-y-auto pt-0 md:pt-4 px-4 pb-4 hide-scrollbar ${(showSearchFacturacion&&!search&&!filterDay&&!filterMonth&&!filterYear)?'hidden':''}`}>
+            <div className={`flex-1 overflow-y-auto pt-3 md:pt-4 px-4 pb-4 hide-scrollbar ${(showSearchFacturacion&&!search&&!filterDay&&!filterMonth&&!filterYear)?'hidden':''}`}>
                 {(facSubTab==='diferidas' ? diferidas.length===0 : filtered.length===0)?(
                     facSubTab==='diferidas'
                     ? <div className="bg-white rounded-xl p-8 text-center border border-gray-200"><i className="fas fa-layer-group text-gray-300 text-3xl mb-2 block"></i><p className="text-gray-600">Sin pedidos diferidos a consolidar</p></div>
@@ -2260,7 +2260,7 @@ const SeccionCatalogo = () => {
             </div>
 
             {/* Contenido */}
-            <div className={`flex-1 overflow-y-auto pt-0 md:pt-4 px-4 pb-4 hide-scrollbar ${(showControlsCatalogo&&!buscar)?'hidden':''}`}>
+            <div className={`flex-1 overflow-y-auto pt-3 md:pt-4 px-4 pb-4 hide-scrollbar ${(showControlsCatalogo&&!buscar)?'hidden':''}`}>
                 {msg && <div className={`mb-4 px-4 py-2.5 rounded-xl text-sm font-medium ${msg.startsWith('✅')?'bg-emerald-50 border border-emerald-300 text-emerald-800':msg.startsWith('❌')?'bg-red-50 border border-red-300 text-red-700':'bg-amber-50 border border-amber-300 text-amber-800'}`}>{msg}</div>}
 
                 <div className="space-y-4 pb-6">
