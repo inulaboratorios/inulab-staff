@@ -419,7 +419,6 @@ const api = {
     getMotorizados:   ()        => api.call('GET', '/api/Users/motorizados'),
     getPrecios:       ()        => api.call('GET', '/api/Precios'),
     savePrecios:      (dtos)    => api.call('POST', '/api/Precios/bulk', dtos),
-    getCatalog:       ()        => api.call('GET',  '/api/Catalog'),
     createExamen:     (data)    => api.call('POST', '/api/Catalog', data),
     deleteExamen:     (id, tipo) => api.call('DELETE', `/api/Precios/${id}/${tipo}`),
     enviarCorreo:     (id, tipo)=> api.call('POST', `/api/Orders/${id}/enviar-correo`, { tipo }),
@@ -2213,7 +2212,6 @@ const SeccionCatalogo = () => {
     const [confirm, setConfirm]     = useState(null);
 
     useEffect(() => {
-        api.getCatalog().then(data => { if (Array.isArray(data) && data.length > 0) setCatalog(data); }).catch(() => {});
         api.getPrecios().then(data => {
             if (Array.isArray(data)) {
                 const map = {}; const descMap = {}; const nombreMap = {};
