@@ -423,8 +423,6 @@ const api = {
     createExamen:     (data)    => api.call('POST', '/api/Catalog', data),
     deleteExamen:     (id, tipo) => api.call('DELETE', `/api/Precios/${id}/${tipo}`),
     enviarCorreo:     (id, tipo)=> api.call('POST', `/api/Orders/${id}/enviar-correo`, { tipo }),
-    getNightMode:     ()        => api.call('GET',  '/api/Config/nightmode'),
-    setNightMode:     (active)  => api.call('PUT',  '/api/Config/nightmode', { active }),
     getMotoLocation:  (id)      => api.call('GET', `/api/Orders/${id}/location`).catch(() => null),
     getUser:          (id)      => api.call('GET', `/api/Users/${id}`).catch(() => null),
     updateComment:    (id, comment) => api.call('PUT', `/api/Orders/${id}/comment`, { comment }),
@@ -2920,7 +2918,6 @@ const App = () => {
     const [auth, setAuth]           = useState(false);
     const [user, setUser]           = useState(null);
     const [orders, setOrders]       = useState([]);
-    const [nightMode, setNightMode] = useState(false);
     const [view, setView]           = useState('inicio');
     const [loading, setLoading]     = useState(true);
     const [loginErr, setLoginErr]   = useState('');
@@ -2959,7 +2956,7 @@ const App = () => {
 
     useEffect(() => {
         const token = localStorage.getItem('inulab_token');
-        if (token) { api.me().then(u => { setUser(u); setAuth(true); loadOrders(); loadNightMode(); }).catch(() => { localStorage.removeItem('inulab_token'); }).finally(() => setLoading(false)); }
+        if (token) { api.me().then(u => { setUser(u); setAuth(true); loadOrders(); }).catch(() => { localStorage.removeItem('inulab_token'); }).finally(() => setLoading(false)); }
         else { setLoading(false); }
     }, []);
 
@@ -3061,14 +3058,12 @@ const App = () => {
     }, [auth]);
 
     const loadOrders = async () => { try { const data = await api.getOrders(); const raw = Array.isArray(data) ? data : (data.orders || []); setOrders(raw.map(normalizeOrder)); } catch (e) { console.error('Error cargando pedidos:', e.message); } };
-    const loadNightMode = async () => { try { const data = await api.getNightMode(); setNightMode(!!data?.active); } catch {} };
-    const toggleNightMode = async () => { const next = !nightMode; setNightMode(next); try { await api.setNightMode(next); } catch {} };
 
     const handleLogin = async (e) => {
         e.preventDefault(); setLoginErr('');
         try {
             const data = await api.login(username, password);
-            if (data.token) { localStorage.setItem('inulab_token', data.token); const u = data.user || data; setUser(u); setAuth(true); await loadOrders(); await loadNightMode(); }
+            if (data.token) { localStorage.setItem('inulab_token', data.token); const u = data.user || data; setUser(u); setAuth(true); await loadOrders(); }
             else throw new Error('Sin token');
         } catch { setLoginErr('Credenciales incorrectas o error de conexión'); }
     };
