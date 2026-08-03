@@ -409,6 +409,7 @@ const api = {
     updateStatus:     (id, s)   => api.call('PUT',  `/api/Orders/${id}/status`, { status: s }),
     assignMotorizado: (id, mId) => api.call('PUT',  `/api/Orders/${id}/assign-motorizado`, { motorizadoId: mId }),
     uploadResult:     (id, fd)  => api.upload(`/api/Orders/${id}/upload-result`, fd),
+    enviarExamen:     (id, itemId) => api.call('PUT', `/api/Orders/${id}/items/${itemId}/enviar`),
     uploadInvoice:    (fd)      => api.upload('/api/Facturas', fd),
     getMotorizados:   ()        => api.call('GET', '/api/Users/motorizados'),
     getPrecios:       ()        => api.call('GET', '/api/Precios'),
@@ -618,6 +619,7 @@ const normalizeOrder = (o) => {
             pet:  { id: it.petId || it.pet?.id, name: it.petName || it.pet?.name || 'Mascota', photo: it.petPhoto || it.pet?.photo || '🐾', owner: it.petOwner || it.pet?.owner || '', lastName: it.petLastName || it.pet?.lastName || '' },
             address: { name: it.addressName || it.address?.name || '', address: it.addressStreet || it.address?.street || it.address?.address || 'N/A', district: it.addressDistrict || it.address?.district || 'N/A', reference: it.addressReference || it.address?.reference || '' },
             pdfData: it.hasPdf ? `${API_BASE}/api/Orders/${o.id}/items/${it.id}/result-pdf` : null,
+            isSent: it.isSent || false,
             tomaMuestra: it.tomaMuestra || it.TomaMuestra || false,
             antecedentes: it.antecedentes || it.Antecedentes || null,
         })),
@@ -871,42 +873,39 @@ const PdfModal = ({ title, subtitle, icon, pdfUrl, date, orderId, userId, client
         </div>
     );
 };
-const UploadResultsModal = ({ order, onClose, onSuccess }) => {
-    const [files, setFiles] = useState({}); const [loading, setLoading] = useState(false); const [msg, setMsg] = useState('');
-    const handleFile = (itemId, e) => { const f = e.target.files[0]; if (!f || f.type !== 'application/pdf') return; setFiles(prev => ({ ...prev, [itemId]: f })); };
+const UploadSingleResultModal = ({ order, item, onClose, onSuccess }) => {
+    const [file, setFile] = useState(null); const [loading, setLoading] = useState(false); const [msg, setMsg] = useState('');
+    const handleFile = e => { const f = e.target.files[0]; if (!f || f.type !== 'application/pdf') return; setFile(f); };
     const submit = async () => {
-        const seleccionados = Object.keys(files); if (seleccionados.length === 0) { setMsg('Selecciona al menos un PDF para subir'); return; }
+        if (!file) { setMsg('Selecciona un PDF para subir'); return; }
         setLoading(true);
-        try { for (const itemId of seleccionados) { const fd = new FormData(); fd.append('file', files[itemId]); fd.append('itemId', itemId); await api.uploadResult(order.id, fd); } onSuccess('✅ Resultados subidos correctamente'); onClose(); } catch (e) { setMsg('❌ Error: ' + e.message); }
+        try {
+            const fd = new FormData(); fd.append('file', file); fd.append('itemId', item.id);
+            await api.uploadResult(order.id, fd);
+            onSuccess('✅ PDF subido. Revísalo y usa "Enviar examen" para que el cliente lo vea.');
+            onClose();
+        } catch (e) { setMsg('❌ Error: ' + e.message); }
         setLoading(false);
     };
     return (
         <ModalPortal>
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
-            <div className="bg-white rounded-2xl w-full max-w-lg border border-gray-200 shadow-2xl max-h-[90vh] flex flex-col">
-                <div className="p-5 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
-                    <div><h2 className="text-gray-800 font-bold">Subir Resultados</h2><p className="text-gray-600 text-sm">{order.userName} · {order.items.length} examen(es)</p></div>
+            <div className="bg-white rounded-2xl w-full max-w-md border border-gray-200 shadow-2xl">
+                <div className="p-5 border-b border-gray-200 flex items-center justify-between">
+                    <div><h2 className="text-gray-800 font-bold">Subir Resultado</h2><p className="text-gray-600 text-sm">{getPetFullName(item.pet)} · {resolverNombreExamen(item.exam?.name)}</p></div>
                     <button onClick={onClose} className="w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600"><i className="fas fa-times"></i></button>
                 </div>
-                <div className="flex-1 overflow-y-auto p-5 space-y-3">
-                    {order.items.map((item, idx) => {
-                        const yaTieneResultado = !!(item.pdfUrl || item.pdfData);
-                        const itemId = item.id;
-                        return (
-                        <div key={itemId || idx} className="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                            <div className="flex items-center gap-3 mb-3"><PetPhoto photo={item.pet?.photo} size="lg" /><div className="flex-1"><p className="font-semibold text-gray-800 text-sm">{getPetFullName(item.pet)}</p><p className="text-gray-600 text-xs">{item.exam?.name}</p></div>{yaTieneResultado&&!files[itemId]&&<span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg font-semibold whitespace-nowrap"><i className="fas fa-check mr-1"></i>Ya subido</span>}</div>
-                            {files[itemId] ? (
-                                <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-300 px-3 py-2 rounded-lg"><i className="fas fa-check-circle text-emerald-600 text-sm"></i><span className="text-emerald-800 text-sm flex-1 truncate">{files[itemId].name}</span><button onClick={() => setFiles(p => { const n={...p}; delete n[itemId]; return n; })} className="text-gray-500 hover:text-gray-700"><i className="fas fa-times text-xs"></i></button></div>
-                            ) : (
-                                <label className="flex items-center gap-3 bg-white border-2 border-dashed border-gray-300 hover:border-cyan-500 hover:bg-cyan-50 px-3 py-3 rounded-lg cursor-pointer transition-all"><i className="fas fa-upload text-gray-500"></i><span className="text-gray-600 text-sm">{yaTieneResultado?'Reemplazar PDF del resultado':'Seleccionar PDF del resultado'}</span><input type="file" accept="application/pdf" className="hidden" onChange={e => handleFile(itemId, e)} /></label>
-                            )}
-                        </div>
-                    );})}
-                    {msg && <p className="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2">{msg}</p>}
+                <div className="p-5">
+                    {file ? (
+                        <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-300 px-3 py-2 rounded-lg"><i className="fas fa-check-circle text-emerald-600 text-sm"></i><span className="text-emerald-800 text-sm flex-1 truncate">{file.name}</span><button onClick={() => setFile(null)} className="text-gray-500 hover:text-gray-700"><i className="fas fa-times text-xs"></i></button></div>
+                    ) : (
+                        <label className="flex items-center gap-3 bg-white border-2 border-dashed border-gray-300 hover:border-cyan-500 hover:bg-cyan-50 px-3 py-3 rounded-lg cursor-pointer transition-all"><i className="fas fa-upload text-gray-500"></i><span className="text-gray-600 text-sm">Seleccionar PDF del resultado</span><input type="file" accept="application/pdf" className="hidden" onChange={handleFile} /></label>
+                    )}
+                    {msg && <p className="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mt-3">{msg}</p>}
                 </div>
-                <div className="p-5 border-t border-gray-200 flex-shrink-0">
+                <div className="p-5 border-t border-gray-200">
                     <button onClick={submit} disabled={loading} className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2">
-                        {loading ? <><i className="fas fa-spinner fa-spin"></i> Subiendo...</> : <><i className="fas fa-cloud-upload-alt"></i> Subir y notificar al cliente</>}
+                        {loading ? <><i className="fas fa-spinner fa-spin"></i> Subiendo...</> : <><i className="fas fa-cloud-upload-alt"></i> Subir PDF</>}
                     </button>
                 </div>
             </div>
@@ -1280,7 +1279,8 @@ const TrackingModal = ({ order, onClose, onCommentSaved }) => {
 
 
 const OrderCard = ({ order, onStatusChange, onSuccess, highlight }) => {
-    const [showUpload, setShowUpload] = useState(false);
+    const [uploadItem, setUploadItem] = useState(null);
+    const [sendingItemId, setSendingItemId] = useState(null);
     const [showInvoice, setShowInvoice] = useState(false);
     const [invoiceOrderId, setInvoiceOrderId] = useState(null);
     const [showAssign, setShowAssign] = useState(false);
@@ -1322,7 +1322,10 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight }) => {
                                 <p className="text-gray-400 text-xs truncate"><i className="fas fa-map-marker-alt mr-1"></i>{item.address?.address&&item.address.address!=='N/A'?`${item.address.address}, `:''}{item.address?.district}</p>
                             </div>
                             {item.tomaMuestra&&<span className="flex-shrink-0 text-xs bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg px-2 py-1 font-medium"><i className="fas fa-syringe mr-1"></i>Toma solicitada</span>}
+                            {order.status==='processing'&&!item.pdfData&&<button onClick={()=>setUploadItem(item)} title="Subir examen" className="w-8 h-8 bg-orange-100 hover:bg-orange-200 rounded-lg flex items-center justify-center text-orange-600 transition-colors flex-shrink-0"><i className="fas fa-file-upload text-xs"></i></button>}
                             {item.pdfData&&<button onClick={()=>setShowPdf({url:item.pdfData,title:item.exam?.name,sub:getPetFullName(item.pet),id:order.id,userId:order.userId,clientName:order.userName,examName:item.exam?.name,petName:getPetFullName(item.pet)})} className="w-8 h-8 bg-purple-100 hover:bg-purple-200 rounded-lg flex items-center justify-center text-purple-600 transition-colors flex-shrink-0"><i className="fas fa-eye text-xs"></i></button>}
+                            {order.status==='processing'&&item.pdfData&&!item.isSent&&<button onClick={async()=>{setSendingItemId(item.id);try{await api.enviarExamen(order.id,item.id);onSuccess&&onSuccess('✅ Examen enviado al cliente');}catch(e){alert('Error al enviar: '+(e.message||''));}setSendingItemId(null);}} disabled={sendingItemId===item.id} title="Enviar examen al cliente" className="w-8 h-8 bg-emerald-100 hover:bg-emerald-200 rounded-lg flex items-center justify-center text-emerald-600 transition-colors flex-shrink-0 disabled:opacity-50"><i className={`fas ${sendingItemId===item.id?'fa-spinner fa-spin':'fa-paper-plane'} text-xs`}></i></button>}
+                            {item.isSent&&<span title="Ya enviado al cliente" className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white flex-shrink-0"><i className="fas fa-check text-xs"></i></span>}
                         </div>
                     ))}
                 </div>
@@ -1348,8 +1351,6 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight }) => {
                     {order.status==='assigned'&&manualMode&&<button onClick={()=>onStatusChange(order.id,'moto_en_camino')} title="Moto en camino" className="w-8 h-8 md:w-auto md:h-auto flex items-center justify-center md:px-3 md:py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-xs font-semibold transition-colors"><i className="fas fa-motorcycle md:mr-1"></i><span className="hidden md:inline">Moto en camino</span></button>}
                     {['moto_en_camino','moto_arrived','pickup_in_progress','sample_received','arrived_at_lab'].includes(order.status)&&manualMode&&(()=>{const nm={moto_en_camino:'moto_arrived',moto_arrived:'sample_received',pickup_in_progress:'sample_received',sample_received:'arrived_at_lab',arrived_at_lab:'processing'};const nl={moto_en_camino:'Llegó a destino',moto_arrived:'Muestra recogida',pickup_in_progress:'Muestra recogida',sample_received:'Llegó al lab',arrived_at_lab:'Procesar'};const ni={moto_en_camino:'fa-home',moto_arrived:'fa-arrow-right',pickup_in_progress:'fa-arrow-right',sample_received:'fa-arrow-right',arrived_at_lab:'fa-arrow-right'};return(<button onClick={()=>onStatusChange(order.id,nm[order.status])} title={nl[order.status]} className="w-8 h-8 md:w-auto md:h-auto flex items-center justify-center md:px-3 md:py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-semibold transition-colors"><i className={`fas ${ni[order.status]} md:mr-1`}></i><span className="hidden md:inline">{nl[order.status]}</span></button>);})()}
                     {order.status==='arrived_at_lab'&&!manualMode&&<button onClick={()=>onStatusChange(order.id,'processing')} title="Procesar" className="w-8 h-8 md:w-auto md:h-auto flex items-center justify-center md:px-3 md:py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-semibold transition-colors"><i className="fas fa-flask md:mr-1"></i><span className="hidden md:inline">Procesar</span></button>}
-                    {order.status==='processing'&&<button onClick={()=>setShowUpload(true)} title="Subir resultados" className="w-8 h-8 md:w-auto md:h-auto flex items-center justify-center md:px-3 md:py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-semibold transition-colors"><i className="fas fa-file-upload md:mr-1"></i><span className="hidden md:inline">Subir resultados</span></button>}
-                    {order.status==='results_uploaded'&&<button onClick={()=>onStatusChange(order.id,'completed')} title="Liberar resultados" className="w-8 h-8 md:w-auto md:h-auto flex items-center justify-center md:px-3 md:py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors"><i className="fas fa-paper-plane md:mr-1"></i><span className="hidden md:inline">Liberar resultados</span></button>}
                     {order.status==='completed'&&!order.invoicePdf&&<button onClick={()=>{setInvoiceOrderId(order.id);setShowInvoice(true);}} title="Subir facturación" className="w-8 h-8 md:w-auto md:h-auto flex items-center justify-center md:px-3 md:py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-semibold transition-colors"><i className="fas fa-receipt md:mr-1"></i><span className="hidden md:inline">Subir facturación</span></button>}
                     {order.status==='completed'&&!order.invoicePdf&&(!order.estadoFacturacion||order.estadoFacturacion==='normal')&&<button onClick={async()=>{if(confirm('¿Diferir este pedido para factura consolidada?')){await api.diferirPedido(order.id);onSuccess&&onSuccess('✅ Pedido diferido para factura consolidada');}}} title="Diferir para factura consolidada" className="w-8 h-8 md:w-auto md:h-auto flex items-center justify-center md:px-3 md:py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-semibold transition-colors"><i className="fas fa-layer-group md:mr-1"></i><span className="hidden md:inline">Diferir para factura consolidada</span></button>}
                     {order.estadoFacturacion==='por_consolidar'&&<span className="px-3 py-1.5 bg-violet-100 text-violet-700 rounded-lg text-xs font-semibold"><i className="fas fa-layer-group mr-1"></i>Por consolidar</span>}
@@ -1366,7 +1367,7 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight }) => {
                     {order.status!=='completed'&&<button onClick={()=>setShowTracking(true)} className="w-8 h-8 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg flex items-center justify-center transition-colors" title="Tracking"><i className="fas fa-motorcycle text-xs"></i></button>}
                 </div>
             </div>
-            {showUpload&&<UploadResultsModal order={order} onClose={()=>setShowUpload(false)} onSuccess={onSuccess}/>}
+            {uploadItem&&<UploadSingleResultModal order={order} item={uploadItem} onClose={()=>setUploadItem(null)} onSuccess={onSuccess}/>}
             {showInvoice&&<InvoiceModal order={{...order, id: invoiceOrderId||order.id}} onClose={()=>setShowInvoice(false)} onSuccess={onSuccess}/>}
             {showAssign&&<AssignModal order={order} onClose={()=>setShowAssign(false)} onAssign={onSuccess}/>}
             {showPdf&&<PdfModal title={showPdf.title} subtitle={showPdf.sub} icon={showPdf.icon||'fa-file-pdf'} pdfUrl={showPdf.url} orderId={showPdf.id} userId={showPdf.userId} clientName={showPdf.clientName} examName={showPdf.examName} petName={showPdf.petName} onClose={()=>setShowPdf(null)}/>}
