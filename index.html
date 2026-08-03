@@ -234,7 +234,6 @@
         .menu-content {
             overflow: hidden;
         }
-        /* Header fijo para móviles con safe-area */
         .app-header {
             position: fixed !important;
             top: 0;
@@ -254,17 +253,14 @@
             padding-top: calc(70px + env(safe-area-inset-top, 0px));
             min-height: 100vh;
         }
-        /* Para páginas con breadcrumb - más espacio */
         .app-content-breadcrumb {
             padding-top: calc(70px + env(safe-area-inset-top, 0px));
             min-height: 100vh;
         }
-        /* Visor de PDF compacto para móviles */
         .pdf-viewer-container {
             max-height: calc(100vh - 280px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
             overflow: hidden;
         }
-        /* Panel de filtros fijo - NUEVA CAPA flotante */
         .filters-panel {
             position: fixed !important;
             top: calc(58px + env(safe-area-inset-top, 0px));
@@ -288,7 +284,6 @@
             margin: 0 auto;
             padding: 0 0.5rem;
         }
-        /* Espaciador para el contenido debajo del panel de filtros */
         .list-spacer-small {
             height: 100px;
         }
@@ -359,7 +354,6 @@
         .login-wrapper {
             background: linear-gradient(135deg,#e0f7fa 0%,#e8f5e9 50%,#e3f2fd 100%);
         }
-        /* Override body/html for desktop */
         @media (min-width: 768px) {
             html, body {
                 position: static;
@@ -440,7 +434,6 @@ const api = {
 
 // Precios hardcodeados desde las imágenes del cliente (fallback si la API no responde)
 const CATALOG_DEFAULT = [
-    // ── MÉDICO: Perfiles ──────────────────────────────────────────────────────
     { id:'P1',  nombre:'Perfil Básico',                     categoria:'Perfiles',         tipo:'medico', precio:179 },
     { id:'P2',  nombre:'Perfil CHEM 15',                    categoria:'Perfiles',         tipo:'medico', precio:224 },
     { id:'P3',  nombre:'Perfil Básico Renal',               categoria:'Perfiles',         tipo:'medico', precio:330 },
@@ -450,11 +443,9 @@ const CATALOG_DEFAULT = [
     { id:'P7',  nombre:'Perfil Hormonal',                   categoria:'Perfiles',         tipo:'medico', precio:170 },
     { id:'P8',  nombre:'Perfil Hemoparásitos',              categoria:'Perfiles',         tipo:'medico', precio:175 },
     { id:'P9',  nombre:'Perfil Felino',                     categoria:'Perfiles',         tipo:'medico', precio:192 },
-    // ── MÉDICO: Hematología ───────────────────────────────────────────────────
     { id:'H1',  nombre:'Hemograma + Reticulocitos',         categoria:'Hematología',      tipo:'medico', precio:43 },
     { id:'H2',  nombre:'Frotis de Hemoparásitos',           categoria:'Hematología',      tipo:'medico', precio:30 },
     { id:'H3',  nombre:'Hemograma Manual',                  categoria:'Hematología',      tipo:'medico', precio:35 },
-    // ── MÉDICO: Bioquímica IDEXX ──────────────────────────────────────────────
     { id:'B1',  nombre:'CHEM 10',                           categoria:'Bioquímica IDEXX', tipo:'medico', precio:150 },
     { id:'B2',  nombre:'CHEM 15',                           categoria:'Bioquímica IDEXX', tipo:'medico', precio:205 },
     { id:'B3',  nombre:'Creatinina',                        categoria:'Bioquímica IDEXX', tipo:'medico', precio:35 },
@@ -470,7 +461,6 @@ const CATALOG_DEFAULT = [
     { id:'B13', nombre:'Fructosamina',                      categoria:'Bioquímica IDEXX', tipo:'medico', precio:95 },
     { id:'B14', nombre:'Fenobarbital',                      categoria:'Bioquímica IDEXX', tipo:'medico', precio:150 },
     { id:'B15', nombre:'Ácidos Biliares',                   categoria:'Bioquímica IDEXX', tipo:'medico', precio:125 },
-    // ── MÉDICO: Endocrinología ────────────────────────────────────────────────
     { id:'E1',  nombre:'Cortisol',                          categoria:'Endocrinología',   tipo:'medico', precio:50 },
     { id:'E2',  nombre:'Progesterona',                      categoria:'Endocrinología',   tipo:'medico', precio:60 },
     { id:'E3',  nombre:'TSH',                               categoria:'Endocrinología',   tipo:'medico', precio:65 },
@@ -478,7 +468,6 @@ const CATALOG_DEFAULT = [
     { id:'E5',  nombre:'T4 Total (IDEXX)',                  categoria:'Endocrinología',   tipo:'medico', precio:98 },
     { id:'E6',  nombre:'T4 Libre',                          categoria:'Endocrinología',   tipo:'medico', precio:48 },
     { id:'E7',  nombre:'T3 Triyodotironina',                categoria:'Endocrinología',   tipo:'medico', precio:65 },
-    // ── MÉDICO: PCR ───────────────────────────────────────────────────────────
     { id:'PCR1',nombre:'PCR Leucemia Felina',               categoria:'PCR',              tipo:'medico', precio:200 },
     { id:'PCR2',nombre:'PCR Mycoplasma Hemotrópico',        categoria:'PCR',              tipo:'medico', precio:200 },
     { id:'PCR3',nombre:'PCR Erlichia',                      categoria:'PCR',              tipo:'medico', precio:200 },
@@ -486,7 +475,6 @@ const CATALOG_DEFAULT = [
     { id:'PCR5',nombre:'PCR Leptospira Interrogans',        categoria:'PCR',              tipo:'medico', precio:200 },
     { id:'PCR6',nombre:'PCR VIF / VILEF',                   categoria:'PCR',              tipo:'medico', precio:220 },
     { id:'PCR7',nombre:'PCR Panel Completo',                categoria:'PCR',              tipo:'medico', precio:380 },
-    // ── MÉDICO: Inmunoserología ───────────────────────────────────────────────
     { id:'I1',  nombre:'SNAP Triple Felino',                 categoria:'Inmunoserología',  tipo:'medico', precio:155 },
     { id:'I2',  nombre:'SNAP 4DX Plus',                     categoria:'Inmunoserología',  tipo:'medico', precio:140 },
     { id:'I5',  nombre:'Brucella Canino',                   categoria:'Inmunoserología',  tipo:'medico', precio:95 },
@@ -494,28 +482,22 @@ const CATALOG_DEFAULT = [
     { id:'I7',  nombre:'Toxoplasma IgG & IgM',              categoria:'Inmunoserología',  tipo:'medico', precio:170 },
     { id:'I8',  nombre:'Lipasa Canina/Felina (Healvet)',     categoria:'Inmunoserología',  tipo:'medico', precio:75 },
     { id:'I9',  nombre:'Lipasa Canina/Felina (IDEXX)',       categoria:'Inmunoserología',  tipo:'medico', precio:125 },
-    // ── MÉDICO: Coagulación ───────────────────────────────────────────────────
     { id:'C1',  nombre:'TP + TTPA + Fibrinógeno',           categoria:'Coagulación',      tipo:'medico', precio:75 },
     { id:'C2',  nombre:'TP + TTPA + Fibrinógeno + Dímero D',categoria:'Coagulación',      tipo:'medico', precio:125 },
-    // ── MÉDICO: Patología ─────────────────────────────────────────────────────
     { id:'PA1', nombre:'Citología',                         categoria:'Patología',        tipo:'medico', precio:70 },
     { id:'PA2', nombre:'Histopatología',                    categoria:'Patología',        tipo:'medico', precio:120 },
-    // ── MÉDICO: Uroanálisis ───────────────────────────────────────────────────
     { id:'U1',  nombre:'Examen de Orina Completo',          categoria:'Uroanálisis',      tipo:'medico', precio:16 },
     { id:'U2',  nombre:'Urocultivo',                        categoria:'Uroanálisis',      tipo:'medico', precio:35 },
     { id:'U3',  nombre:'Orina + Urocultivo',                categoria:'Uroanálisis',      tipo:'medico', precio:46 },
     { id:'U4',  nombre:'UPC Colorimetría',                  categoria:'Uroanálisis',      tipo:'medico', precio:55 },
     { id:'U5',  nombre:'UPC IDEXX',                         categoria:'Uroanálisis',      tipo:'medico', precio:92 },
     { id:'U6',  nombre:'Orina Completo IDEXX SEDIVUE',      categoria:'Uroanálisis',      tipo:'medico', precio:75 },
-    // ── MÉDICO: Parasitología ─────────────────────────────────────────────────
     { id:'PR1', nombre:'Coprológico Simple',                categoria:'Parasitología',    tipo:'medico', precio:15 },
     { id:'PR2', nombre:'Coprológico Funcional',             categoria:'Parasitología',    tipo:'medico', precio:25 },
     { id:'PR3', nombre:'Coprológico Completo',              categoria:'Parasitología',    tipo:'medico', precio:40 },
     { id:'PR4', nombre:'Giardia Ag Cuantitativo',           categoria:'Parasitología',    tipo:'medico', precio:70 },
-    // ── MÉDICO: Microbiología ─────────────────────────────────────────────────
     { id:'M1',  nombre:'Cultivo + 1 Antibiograma',          categoria:'Microbiología',    tipo:'medico', precio:45 },
 
-    // ── DUEÑO: Servicios (paquetes amigables) ─────────────────────────────────
     { id:'P1',  nombre:'Chequeo General',                   categoria:'Servicios',        tipo:'dueno', precio:250 },
     { id:'P2',  nombre:'Chequeo Completo',                  categoria:'Servicios',        tipo:'dueno', precio:320 },
     { id:'P3',  nombre:'Control de Riñones',                categoria:'Servicios',        tipo:'dueno', precio:450 },
@@ -524,7 +506,6 @@ const CATALOG_DEFAULT = [
     { id:'U1',  nombre:'Análisis de Orina',                 categoria:'Servicios',        tipo:'dueno', precio:50 },
     { id:'PR3', nombre:'Examen de Heces',                   categoria:'Servicios',        tipo:'dueno', precio:90 },
     { id:'M1',  nombre:'Problemas de Piel u Oídos',        categoria:'Servicios',        tipo:'dueno', precio:90 },
-    // ── DUEÑO: Perfiles ───────────────────────────────────────────────────────
     { id:'DP1', nombre:'Perfil Básico',                     categoria:'Perfiles',         tipo:'dueno', precio:250 },
     { id:'DP2', nombre:'Perfil CHEM 15',                    categoria:'Perfiles',         tipo:'dueno', precio:320 },
     { id:'DP3', nombre:'Perfil Básico Renal',               categoria:'Perfiles',         tipo:'dueno', precio:400 },
@@ -534,11 +515,9 @@ const CATALOG_DEFAULT = [
     { id:'DP7', nombre:'Perfil Hormonal',                   categoria:'Perfiles',         tipo:'dueno', precio:280 },
     { id:'DP8', nombre:'Perfil Hemoparásitos',              categoria:'Perfiles',         tipo:'dueno', precio:260 },
     { id:'DP9', nombre:'Perfil Felino',                     categoria:'Perfiles',         tipo:'dueno', precio:280 },
-    // ── DUEÑO: Hematología ────────────────────────────────────────────────────
     { id:'DH1', nombre:'Hemograma + Reticulocitos',         categoria:'Hematología',      tipo:'dueno', precio:70 },
     { id:'DH2', nombre:'Frotis de Hemoparásitos',           categoria:'Hematología',      tipo:'dueno', precio:60 },
     { id:'DH3', nombre:'Hemograma Manual',                  categoria:'Hematología',      tipo:'dueno', precio:65 },
-    // ── DUEÑO: Bioquímica IDEXX ───────────────────────────────────────────────
     { id:'DB1', nombre:'CHEM 10',                           categoria:'Bioquímica IDEXX', tipo:'dueno', precio:195 },
     { id:'DB2', nombre:'CHEM 15',                           categoria:'Bioquímica IDEXX', tipo:'dueno', precio:270 },
     { id:'DB3', nombre:'Creatinina',                        categoria:'Bioquímica IDEXX', tipo:'dueno', precio:45 },
@@ -554,7 +533,6 @@ const CATALOG_DEFAULT = [
     { id:'DB13',nombre:'Fructosamina',                      categoria:'Bioquímica IDEXX', tipo:'dueno', precio:140 },
     { id:'DB14',nombre:'Fenobarbital',                      categoria:'Bioquímica IDEXX', tipo:'dueno', precio:220 },
     { id:'DB15',nombre:'Ácidos Biliares',                   categoria:'Bioquímica IDEXX', tipo:'dueno', precio:190 },
-    // ── DUEÑO: Endocrinología ─────────────────────────────────────────────────
     { id:'DE1', nombre:'Cortisol',                          categoria:'Endocrinología',   tipo:'dueno', precio:85 },
     { id:'DE2', nombre:'Progesterona',                      categoria:'Endocrinología',   tipo:'dueno', precio:95 },
     { id:'DE3', nombre:'TSH',                               categoria:'Endocrinología',   tipo:'dueno', precio:98 },
@@ -562,7 +540,6 @@ const CATALOG_DEFAULT = [
     { id:'DE5', nombre:'T4 Total (IDEXX)',                  categoria:'Endocrinología',   tipo:'dueno', precio:160 },
     { id:'DE6', nombre:'T4 Libre',                          categoria:'Endocrinología',   tipo:'dueno', precio:75 },
     { id:'DE7', nombre:'T3 Triyodotironina',                categoria:'Endocrinología',   tipo:'dueno', precio:85 },
-    // ── DUEÑO: PCR ────────────────────────────────────────────────────────────
     { id:'DPCR1',nombre:'PCR Leucemia Felina',              categoria:'PCR',              tipo:'dueno', precio:250 },
     { id:'DPCR2',nombre:'PCR Mycoplasma Hemotrópico',       categoria:'PCR',              tipo:'dueno', precio:250 },
     { id:'DPCR3',nombre:'PCR Erlichia',                     categoria:'PCR',              tipo:'dueno', precio:250 },
@@ -570,7 +547,6 @@ const CATALOG_DEFAULT = [
     { id:'DPCR5',nombre:'PCR Leptospira Interrogans',       categoria:'PCR',              tipo:'dueno', precio:250 },
     { id:'DPCR6',nombre:'PCR VIF / VILEF',                  categoria:'PCR',              tipo:'dueno', precio:300 },
     { id:'DPCR7',nombre:'PCR Panel Completo',               categoria:'PCR',              tipo:'dueno', precio:480 },
-    // ── DUEÑO: Inmunoserología ────────────────────────────────────────────────
     { id:'DI1', nombre:'SNAP Triple Felino',                 categoria:'Inmunoserología',  tipo:'dueno', precio:240 },
     { id:'DI2', nombre:'SNAP 4DX Plus',                     categoria:'Inmunoserología',  tipo:'dueno', precio:220 },
     { id:'DI5', nombre:'Brucella Canino',                   categoria:'Inmunoserología',  tipo:'dueno', precio:180 },
@@ -578,26 +554,21 @@ const CATALOG_DEFAULT = [
     { id:'DI7', nombre:'Toxoplasma IgG & IgM',              categoria:'Inmunoserología',  tipo:'dueno', precio:270 },
     { id:'DI8', nombre:'Lipasa Canina/Felina (Healvet)',     categoria:'Inmunoserología',  tipo:'dueno', precio:130 },
     { id:'DI9', nombre:'Lipasa Canina/Felina (IDEXX)',       categoria:'Inmunoserología',  tipo:'dueno', precio:125 },
-    // ── DUEÑO: Coagulación ────────────────────────────────────────────────────
     { id:'DC1', nombre:'TP + TTPA + Fibrinógeno',           categoria:'Coagulación',      tipo:'dueno', precio:150 },
     { id:'DC2', nombre:'TP + TTPA + Fibrinógeno + Dímero D',categoria:'Coagulación',      tipo:'dueno', precio:255 },
     { id:'DC3', nombre:'Dímero D (Healvet)',                  categoria:'Coagulación',      tipo:'dueno', precio:85 },
-    // ── DUEÑO: Patología ──────────────────────────────────────────────────────
     { id:'DPA1',nombre:'Citología',                         categoria:'Patología',        tipo:'dueno', precio:130 },
     { id:'DPA2',nombre:'Histopatología',                    categoria:'Patología',        tipo:'dueno', precio:250 },
-    // ── DUEÑO: Uroanálisis ────────────────────────────────────────────────────
     { id:'DU1', nombre:'Examen de Orina Completo',          categoria:'Uroanálisis',      tipo:'dueno', precio:45 },
     { id:'DU2', nombre:'Urocultivo',                        categoria:'Uroanálisis',      tipo:'dueno', precio:50 },
     { id:'DU3', nombre:'Orina + Urocultivo',                categoria:'Uroanálisis',      tipo:'dueno', precio:93 },
     { id:'DU4', nombre:'UPC Colorimetría',                  categoria:'Uroanálisis',      tipo:'dueno', precio:90 },
     { id:'DU5', nombre:'UPC IDEXX',                         categoria:'Uroanálisis',      tipo:'dueno', precio:140 },
     { id:'DU6', nombre:'Orina Completo IDEXX SEDIVUE',      categoria:'Uroanálisis',      tipo:'dueno', precio:75 },
-    // ── DUEÑO: Parasitología ──────────────────────────────────────────────────
     { id:'DPR1',nombre:'Coprológico Simple',                categoria:'Parasitología',    tipo:'dueno', precio:45 },
     { id:'DPR2',nombre:'Coprológico Funcional',             categoria:'Parasitología',    tipo:'dueno', precio:55 },
     { id:'DPR3',nombre:'Coprológico Completo',              categoria:'Parasitología',    tipo:'dueno', precio:95 },
     { id:'DPR4',nombre:'Giardia Ag Cuantitativo',           categoria:'Parasitología',    tipo:'dueno', precio:95 },
-    // ── DUEÑO: Microbiología ──────────────────────────────────────────────────
     { id:'DM1', nombre:'Cultivo + 1 Antibiograma',          categoria:'Microbiología',    tipo:'dueno', precio:120 },
 ];
 
@@ -698,7 +669,6 @@ const PetPhoto = ({ photo, size = 'md' }) => {
     return <span className={`${cls} flex items-center justify-center leading-none flex-shrink-0`}>{photo}</span>;
 };
 
-// ── MAPA ──────────────────────────────────────────
 const TrackingMap = ({ order, phase }) => {
     const mapRef = useRef(null); const mapInst = useRef(null); const motoMarker = useRef(null);
     const [eta, setEta] = useState('--'); const [dist, setDist] = useState('--'); const [hasGps, setHasGps] = useState(false);
@@ -733,7 +703,6 @@ const TrackingMap = ({ order, phase }) => {
     );
 };
 
-// ── PDF VIEWER (página completa, igual al cliente) ────────────────────────
 const PdfViewer = ({ title, subtitle, icon, pdfUrl, date, orderId, userId, clientName, examName, petName, onClose }) => {
     const [blobUrl, setBlobUrl] = React.useState(null);
     const [loading, setLoading] = React.useState(true);
@@ -826,7 +795,6 @@ const PdfViewer = ({ title, subtitle, icon, pdfUrl, date, orderId, userId, clien
 
     return (
         <div className="flex flex-col h-full bg-gray-50">
-            {/* Header fijo */}
             <div className="flex-shrink-0 bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
                 <button onClick={onClose} className="w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600 transition-colors flex-shrink-0">
                     <i className="fas fa-arrow-left text-sm"></i>
@@ -834,16 +802,13 @@ const PdfViewer = ({ title, subtitle, icon, pdfUrl, date, orderId, userId, clien
                 <i className={`fas ${icon||'fa-file-pdf'} ${iconColor} text-lg`}></i>
                 <span className={`font-bold text-base ${accentColor}`}>{isInvoice ? 'Facturación' : 'Resultado'}</span>
             </div>
-            {/* Contenido scrollable */}
             <div className="flex-1 overflow-y-auto hide-scrollbar">
                 <div className="p-4 max-w-2xl mx-auto">
-                    {/* Info */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-4">
                         <h2 className="text-xl font-bold text-gray-800 mb-1">{title}</h2>
                         {date && <p className="text-sm text-gray-500 mb-0.5 flex items-center gap-1"><i className="fas fa-calendar text-xs"></i>{limaDate(date).toLocaleDateString('es-PE',{day:'numeric',month:'long',year:'numeric'})}</p>}
                         {subtitle && <p className="text-sm text-gray-500 flex items-center gap-1"><i className="fas fa-user text-xs"></i>{subtitle}</p>}
                     </div>
-                    {/* PDF */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4">
                         {loading && (
                             <div className="flex flex-col items-center gap-3 py-16">
@@ -865,7 +830,6 @@ const PdfViewer = ({ title, subtitle, icon, pdfUrl, date, orderId, userId, clien
                             />
                         )}
                     </div>
-                    {/* Descargar / Enviar al correo */}
                     <div className="flex gap-3 mb-2">
                         <button onClick={blobUrl ? handleDownload : undefined} disabled={!blobUrl||loading}
                             className={`flex-1 py-3.5 rounded-xl font-bold text-white flex items-center justify-center gap-2 transition-colors ${blobUrl&&!loading?btnColor:'bg-gray-300 cursor-not-allowed'}`}>
@@ -885,7 +849,6 @@ const PdfViewer = ({ title, subtitle, icon, pdfUrl, date, orderId, userId, clien
 };
 
 
-// ── MODAL PORTAL — saca los modales fuera del árbol de la app (a <body>) ──
 // Esto evita que un modal "fixed" quede atrapado/encajonado dentro de contenedores
 // con scroll propio (header/franja arriba, barra inferior abajo tapándolo).
 const ModalPortal = ({ children }) => {
@@ -901,7 +864,6 @@ const ModalPortal = ({ children }) => {
     return ReactDOM.createPortal(children, node);
 };
 
-// ── PDF MODAL (alias para compatibilidad - renderiza dentro del layout) ──────
 const PdfModal = ({ title, subtitle, icon, pdfUrl, date, orderId, userId, clientName, examName, petName, onClose }) => {
     return (
         <div className="absolute inset-0 bg-white z-50 flex flex-col">
@@ -909,7 +871,6 @@ const PdfModal = ({ title, subtitle, icon, pdfUrl, date, orderId, userId, client
         </div>
     );
 };
-// ── MODAL SUBIR RESULTADOS ────────────────────────
 const UploadResultsModal = ({ order, onClose, onSuccess }) => {
     const [files, setFiles] = useState({}); const [loading, setLoading] = useState(false); const [msg, setMsg] = useState('');
     const handleFile = (itemId, e) => { const f = e.target.files[0]; if (!f || f.type !== 'application/pdf') return; setFiles(prev => ({ ...prev, [itemId]: f })); };
@@ -954,7 +915,6 @@ const UploadResultsModal = ({ order, onClose, onSuccess }) => {
     );
 };
 
-// ── MODAL COMPROBANTE ─────────────────────────────
 const InvoiceModal = ({ order, onClose, onSuccess }) => {
     const [file, setFile] = useState(null); const [type, setType] = useState(order.documentType || 'boleta'); const typeFixed = order.invoiceRequested; const [loading, setLoading] = useState(false); const [msg, setMsg] = useState('');
     const submit = async () => {
@@ -989,7 +949,6 @@ const InvoiceModal = ({ order, onClose, onSuccess }) => {
     );
 };
 
-// ── MODAL ASIGNAR MOTO ────────────────────────────
 const AssignModal = ({ order, onClose, onAssign }) => {
     const [motos, setMotos] = useState([]); const [selected, setSelected] = useState(null); const [loading, setLoading] = useState(false);
     useEffect(() => { api.getMotorizados().then(data => setMotos(Array.isArray(data) ? data : [])).catch(() => setMotos([])); }, []);
@@ -1009,7 +968,6 @@ const AssignModal = ({ order, onClose, onAssign }) => {
     );
 };
 
-// ── MAP BUTTON ───────────────────────────────────────────────────────────
 const MapButton = ({ address, district }) => {
     const [show, setShow] = React.useState(false);
     const query = encodeURIComponent((address||'')+' '+(district||'')+' Lima Peru');
@@ -1034,7 +992,6 @@ const MapButton = ({ address, district }) => {
     );
 };
 
-// ── PHONE BUTTON ─────────────────────────────────────────────────────────
 const PhoneButton = ({ userId }) => {
     const [phone, setPhone] = React.useState(null);
     const [showPopup, setShowPopup] = React.useState(false);
@@ -1052,9 +1009,7 @@ const PhoneButton = ({ userId }) => {
             setLoading(false);
         }
         if (!p) { alert('Este cliente no tiene teléfono registrado'); return; }
-        // Intentar abrir llamada (funciona en móvil/tablet)
         window.location.href = `tel:${p}`;
-        // Mostrar popup con número (útil en PC)
         setShowPopup(true);
         setTimeout(() => setShowPopup(false), 4000);
     };
@@ -1114,7 +1069,6 @@ const WhatsAppButton = ({ userId }) => {
     );
 };
 
-// ── TRACKING MODAL ───────────────────────────────────────────────────────
 const AntecedentesModal = ({ order, onClose }) => {
     const itemsConAntecedentes = (order.items || []).filter(it => it.antecedentes);
     return (
@@ -1196,7 +1150,6 @@ const TrackingModal = ({ order, onClose, onCommentSaved }) => {
         <ModalPortal>
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[300] p-4">
             <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl border border-gray-200" style={{height:'85vh',display:'flex',flexDirection:'column'}}>
-                {/* Header */}
                 <div className="p-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-cyan-100 rounded-xl flex items-center justify-center">
@@ -1211,9 +1164,7 @@ const TrackingModal = ({ order, onClose, onCommentSaved }) => {
                         <i className="fas fa-times"></i>
                     </button>
                 </div>
-                {/* Body */}
                 <div className="flex flex-col md:flex-row gap-4 p-4 md:p-5 flex-1 min-h-0 overflow-y-auto md:overflow-visible hide-scrollbar">
-                    {/* Estado del pedido — scroll */}
                     <div className="flex-1 bg-white rounded-2xl border border-gray-200 p-4 md:p-5 md:overflow-y-auto hide-scrollbar">
                         <h3 className="font-bold text-gray-800 mb-4">Estado del pedido</h3>
                         <div>
@@ -1242,7 +1193,6 @@ const TrackingModal = ({ order, onClose, onCommentSaved }) => {
                             })}
                         </div>
                     </div>
-                    {/* Detalle + comentario del lab — fijo */}
                     <div className="w-full md:w-80 md:flex-shrink-0 flex flex-col gap-3 md:overflow-y-auto hide-scrollbar">
                         <div className="bg-white rounded-2xl border border-gray-200 p-4 flex flex-col gap-3">
                             <h3 className="font-bold text-gray-800 mb-1">Detalle del pedido</h3>
@@ -1268,7 +1218,6 @@ const TrackingModal = ({ order, onClose, onCommentSaved }) => {
                                     </div>
                                 </div>
                             )}
-                            {/* Comentario del cliente */}
                             <div className="flex items-start gap-3 bg-gray-50 rounded-xl p-3">
                                 <div className="w-9 h-9 bg-cyan-100 rounded-xl flex items-center justify-center flex-shrink-0">
                                     <i className="fas fa-comment text-cyan-600 text-xs"></i>
@@ -1287,7 +1236,6 @@ const TrackingModal = ({ order, onClose, onCommentSaved }) => {
                                     <p className="text-xs text-gray-500">{order.staffComment}</p>
                                 </div>
                             </div>}
-                            {/* Instrucciones al cliente - expandible dentro del mismo recuadro */}
                             <div className="border-t border-gray-100 pt-3">
                                 {!showInstrucciones ? (
                                     <button onClick={()=>setShowInstrucciones(true)}
@@ -1331,7 +1279,6 @@ const TrackingModal = ({ order, onClose, onCommentSaved }) => {
 
 
 
-// ── TARJETA PEDIDO (diseño nuevo) ────────────────────────────────────────
 const OrderCard = ({ order, onStatusChange, onSuccess, highlight }) => {
     const [showUpload, setShowUpload] = useState(false);
     const [showInvoice, setShowInvoice] = useState(false);
@@ -1357,7 +1304,6 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight }) => {
                     {!(manualMode&&order.status==='assigned')&&<span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${si.bg} ${si.color}`}>
                         <i className={`fas ${si.icon} text-xs`}></i>{si.label}
                     </span>}
-                    {/* Botón manual por tarjeta */}
                     {order.status !== 'completed' && (
                         <button onClick={async()=>{ const next=!manualMode; setManualMode(next); try{ await api.updateManual(order.id, next); }catch(e){ setManualMode(!next); } }}
                             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm ${manualMode?'bg-red-500 text-white hover:bg-red-600':'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>
@@ -1431,7 +1377,6 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight }) => {
 };
 
 
-// ── SECCIÓN INICIO ────────────────────────────────
 const SeccionInicio = ({ orders, user, onGoTo }) => {
     const [selPdf, setSelPdf] = useState(null);
     const pending   = orders.filter(o => (o.status !== 'completed' || !o.invoicePdf) && o.estadoFacturacion !== 'por_consolidar' && o.estadoFacturacion !== 'consolidado');
@@ -1480,7 +1425,6 @@ const SeccionInicio = ({ orders, user, onGoTo }) => {
     );
 };
 
-// ── SECCIÓN PEDIDOS ───────────────────────────────
 const SeccionPedidos = ({ orders, onStatusChange, onSuccess, onRefresh }) => {
     const [tab, setTab] = useState('pending'); const [search, setSearch] = useState(''); const [showSearch, setShowSearch] = useState(false);
     const pending   = orders.filter(o => (o.status !== 'completed' || !o.invoicePdf) && o.estadoFacturacion !== 'por_consolidar' && o.estadoFacturacion !== 'consolidado');
@@ -1488,7 +1432,6 @@ const SeccionPedidos = ({ orders, onStatusChange, onSuccess, onRefresh }) => {
     const list = (tab==='pending'?pending:completed).filter(o => !search||o.userName.toLowerCase().includes(search.toLowerCase())||o.items.some(it=>it.exam?.name?.toLowerCase().includes(search.toLowerCase())||it.pet?.name?.toLowerCase().includes(search.toLowerCase())));
     return (
         <div className="flex flex-col h-full">
-            {/* Recuadro de color con todos los controles — solo móvil */}
             <div className="md:hidden bg-white flex-shrink-0" style={{boxShadow:'0 4px 14px -2px rgba(0,0,0,0.1)'}}>
                 <div style={{padding:'10px 16px'}}>
                     <div className="bg-gradient-to-r from-blue-500 to-blue-700 rounded-xl px-3 py-1.5 flex items-center gap-2">
@@ -1531,7 +1474,6 @@ const SeccionPedidos = ({ orders, onStatusChange, onSuccess, onRefresh }) => {
     );
 };
 
-// ── SECCIÓN PACIENTES ─────────────────────────────
 const SeccionPacientes = ({ orders }) => {
     // ALL hooks at top - no conditions before hooks
     const [search, setSearch] = useState('');
@@ -1663,7 +1605,6 @@ const SeccionPacientes = ({ orders }) => {
 
     return (
         <div className="flex flex-col h-full">
-            {/* Recuadro de color con todos los controles — solo móvil */}
             <div className="md:hidden bg-white flex-shrink-0" style={{boxShadow:'0 4px 14px -2px rgba(0,0,0,0.1)'}}>
                 <div style={{padding:'10px 16px'}}>
                     <div className="bg-gradient-to-r from-emerald-500 to-emerald-700 rounded-xl px-3 py-1.5 flex items-center gap-2">
@@ -1737,7 +1678,6 @@ const SeccionPacientes = ({ orders }) => {
 };
 
 
-// ── SECCIÓN RESULTADOS ────────────────────────────
 const SeccionResultados = ({ orders }) => {
     const [search, setSearch] = useState('');
     const [showSearchResultados, setShowSearchResultados] = useState(false);
@@ -1779,7 +1719,6 @@ const SeccionResultados = ({ orders }) => {
 
     return (
         <div className="flex flex-col h-full relative">
-            {/* Recuadro de color con todos los controles — solo móvil */}
             <div className="md:hidden bg-white flex-shrink-0" style={{boxShadow:'0 4px 14px -2px rgba(0,0,0,0.1)'}}>
                 <div style={{padding:'10px 16px'}}>
                     <div className="bg-gradient-to-r from-purple-500 to-purple-700 rounded-xl px-3 py-1.5 flex items-center gap-2">
@@ -1868,9 +1807,7 @@ const SeccionResultados = ({ orders }) => {
 };
 
 
-// ── SECCIÓN FACTURACIÓN (con filtro por fecha) ────
 
-// ── PEDIDOS POR CONSOLIDAR ─────────────────────────────────────────────
 const SeccionPorConsolidar = ({ onSuccess, onBack }) => {
     const [nivel, setNivel] = React.useState(2); // 2=clientes, 3=pedidos
     const [clientes, setClientes] = React.useState([]);
@@ -2066,7 +2003,6 @@ const SeccionFacturacion = ({ orders, onRefresh }) => {
 
     return (
         <div className="flex flex-col h-full relative">
-            {/* Recuadro de color con todos los controles — solo móvil */}
             <div className="md:hidden bg-white flex-shrink-0" style={{boxShadow:'0 4px 14px -2px rgba(0,0,0,0.1)'}}>
                 <div style={{padding:'10px 16px'}}>
                     <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl px-3 py-1.5 flex items-center gap-2">
@@ -2105,25 +2041,21 @@ const SeccionFacturacion = ({ orders, onRefresh }) => {
                     <span className="text-amber-600 font-semibold text-sm flex items-center gap-2 mr-1"><i className="fas fa-file-invoice-dollar"></i>Facturación</span>
                     <button onClick={()=>setFacSubTab('entregadas')} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${facSubTab==='entregadas'?'bg-amber-500 text-white':'bg-gray-100 text-gray-600'}`}>Entregadas</button>
                     <button onClick={()=>setFacSubTab('diferidas')} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${facSubTab==='diferidas'?'bg-violet-600 text-white':'bg-gray-100 text-gray-600'}`}>Diferidas</button>
-                    {/* Buscador */}
                     <div className="relative flex-1 min-w-36">
                         <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
                         <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar cliente..."
                             className="w-full pl-9 pr-4 py-2 rounded-xl bg-gray-100 border border-gray-200 text-gray-800 text-sm focus:border-amber-500 focus:outline-none"/>
                     </div>
-                    {/* Día */}
                     <select value={filterDay} onChange={e=>setFilterDay(e.target.value)}
                         className="px-3 py-2 rounded-xl bg-gray-100 border border-gray-200 text-gray-800 text-sm focus:border-amber-500 focus:outline-none">
                         <option value="">Día</option>
                         {dias.map(d=><option key={d} value={d}>{d}</option>)}
                     </select>
-                    {/* Mes */}
                     <select value={filterMonth} onChange={e=>setFilterMonth(e.target.value)}
                         className="px-3 py-2 rounded-xl bg-gray-100 border border-gray-200 text-gray-800 text-sm focus:border-amber-500 focus:outline-none">
                         <option value="">Mes</option>
                         {meses.map((m,i)=><option key={i} value={String(i+1).padStart(2,'0')}>{m}</option>)}
                     </select>
-                    {/* Año */}
                     <select value={filterYear} onChange={e=>setFilterYear(e.target.value)}
                         className="px-3 py-2 rounded-xl bg-gray-100 border border-gray-200 text-gray-800 text-sm focus:border-amber-500 focus:outline-none">
                         <option value="">Año</option>
@@ -2191,7 +2123,6 @@ const SeccionFacturacion = ({ orders, onRefresh }) => {
     );
 };
 
-// ── SECCIÓN CATÁLOGO (con modo edición de precios) ─
 const SeccionCatalogo = () => {
     const [catalog, setCatalog]     = useState(CATALOG_DEFAULT);
     const [precios, setPrecios]     = useState({});
@@ -2317,7 +2248,6 @@ const SeccionCatalogo = () => {
 
     return (
         <div className="flex flex-col h-full">
-            {/* Recuadro de color con todos los controles — solo móvil */}
             <div className="md:hidden bg-white flex-shrink-0" style={{boxShadow:'0 4px 14px -2px rgba(0,0,0,0.1)'}}>
                 <div style={{padding:'10px 16px'}}>
                     <div className="bg-gradient-to-r from-indigo-500 to-indigo-700 rounded-xl px-3 py-1.5 flex items-center gap-2">
@@ -2357,12 +2287,10 @@ const SeccionCatalogo = () => {
                     )}
                 </div>
             </div>
-            {/* Barra superior */}
             <div className="hidden md:block flex-shrink-0 bg-white border-b border-gray-200 p-4">
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-3 flex-wrap">
                         <span className="text-indigo-600 font-semibold text-sm flex items-center gap-2"><i className="fas fa-list-alt"></i>Catálogo</span>
-                        {/* Tabs Médicos / Dueños */}
                         <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
                             {[{k:'medico',label:'Médicos'},{k:'dueno',label:'Dueños'}].map(({k,label}) => (
                                 <button key={k} onClick={() => setFiltro(k)}
@@ -2371,18 +2299,15 @@ const SeccionCatalogo = () => {
                                 </button>
                             ))}
                         </div>
-                        {/* Buscador */}
                         <div className="relative">
                             <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
                             <input value={buscar} onChange={e => setBuscar(e.target.value)} placeholder="Buscar examen..."
                                 className="pl-9 pr-4 py-2 rounded-xl bg-gray-100 border border-gray-200 text-gray-800 text-sm focus:border-indigo-500 focus:outline-none w-44"/>
                         </div>
                     </div>
-                    {/* Botones de acción */}
                     <div className="flex items-center gap-2">
                         {!modoEdicion ? (
                             <>
-                                {/* Modo lectura: solo Editar Precios */}
                                 <button onClick={() => setModoEdicion(true)}
                                     className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 bg-gray-500 hover:bg-amber-600 text-white transition-colors">
                                     <i className="fas fa-edit"></i>Editar
@@ -2390,7 +2315,6 @@ const SeccionCatalogo = () => {
                             </>
                         ) : (
                             <>
-                                {/* Modo edición: Nuevo (categoría nueva) + Cancelar + Guardar */}
                                 <button onClick={() => { setForm(f => ({ ...f, categoria: '', tipo: filtro })); setShowForm(true); }}
                                     className="px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 transition-colors">
                                     <i className="fas fa-folder-plus"></i>Nueva categoría
@@ -2408,7 +2332,6 @@ const SeccionCatalogo = () => {
                         )}
                     </div>
                 </div>
-                {/* Banner modo edición */}
                 {modoEdicion && (
                     <div className="mt-3 bg-amber-50 border border-amber-300 rounded-xl px-4 py-2.5 flex items-center gap-2">
                         <i className="fas fa-pencil-alt text-amber-600 text-sm"></i>
@@ -2418,7 +2341,6 @@ const SeccionCatalogo = () => {
                 )}
             </div>
 
-            {/* Contenido */}
             <div className={`flex-1 overflow-y-auto pt-3 md:pt-4 px-4 pb-4 hide-scrollbar ${(showControlsCatalogo&&!buscar)?'hidden':''}`}>
                 {msg && <div className={`mb-4 px-4 py-2.5 rounded-xl text-sm font-medium ${msg.startsWith('✅')?'bg-emerald-50 border border-emerald-300 text-emerald-800':msg.startsWith('❌')?'bg-red-50 border border-red-300 text-red-700':'bg-amber-50 border border-amber-300 text-amber-800'}`}>{msg}</div>}
 
@@ -2479,7 +2401,6 @@ const SeccionCatalogo = () => {
                                                     </span>
                                                 </div>
                                             )}
-                                            {/* Lápiz para editar el subtítulo, solo en modo edición */}
                                             {modoEdicion && (
                                                 <button onClick={() => setDescAbiertos(prev => ({ ...prev, [key]: !prev[key] }))}
                                                     title="Editar subtítulo"
@@ -2487,7 +2408,6 @@ const SeccionCatalogo = () => {
                                                     <i className="fas fa-pencil-alt text-xs"></i>
                                                 </button>
                                             )}
-                                            {/* Eliminar solo en modo edición */}
                                             {modoEdicion && (
                                                 <button onClick={() => setConfirm(ex)}
                                                     className="w-7 h-7 bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-700 rounded-lg flex items-center justify-center transition-all flex-shrink-0">
@@ -2495,7 +2415,6 @@ const SeccionCatalogo = () => {
                                                 </button>
                                             )}
                                         </div>
-                                        {/* Input inline del subtítulo, solo si el lápiz está activado */}
                                         {modoEdicion && descOpen && (
                                             <div className="mt-2 flex items-center gap-2">
                                                 <i className="fas fa-pencil-alt text-indigo-400 text-xs flex-shrink-0"></i>
@@ -2513,7 +2432,6 @@ const SeccionCatalogo = () => {
                 </div>
             </div>
 
-            {/* Modal agregar examen */}
             {showForm && (
                 <ModalPortal>
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
@@ -2539,7 +2457,6 @@ const SeccionCatalogo = () => {
                 </ModalPortal>
             )}
 
-            {/* Modal confirmar eliminar */}
             {confirm && (
                 <ModalPortal>
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
@@ -2556,7 +2473,6 @@ const SeccionCatalogo = () => {
     );
 };
 
-// ── VISTA MOTORIZADO ──────────────────────────────
 const VistaMoto = ({ orders, currentUser, onStatusChange, onLogout, success, setSuccess }) => {
     const myOrders = orders.filter(o => ['assigned','moto_en_camino','moto_arrived','pickup_in_progress','sample_received'].includes(o.status));
     const activeOrderId = myOrders[0]?.id;
@@ -2568,7 +2484,6 @@ const VistaMoto = ({ orders, currentUser, onStatusChange, onLogout, success, set
     }, [activeOrderId]);
     return (
         <div className="h-screen bg-gray-100 flex flex-col" style={{paddingTop:'env(safe-area-inset-top)',paddingBottom:'env(safe-area-inset-bottom)'}}>
-            {/* Header móvil */}
             <div className="bg-white border-b border-gray-200 px-4 flex items-center justify-between shadow-sm flex-shrink-0" style={{paddingTop:'max(12px,env(safe-area-inset-top))',paddingBottom:'12px'}}>
                 <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
@@ -2599,14 +2514,12 @@ const VistaMoto = ({ orders, currentUser, onStatusChange, onLogout, success, set
                     const nextLabel={assigned:'🏍️  Estoy en camino',moto_en_camino:'📍  Ya llegué al cliente',moto_arrived:'🧪  Muestra recogida — Voy al lab',pickup_in_progress:'🧪  Muestra recogida — Voy al lab',sample_received:'🏥  Llegué al laboratorio'};
                     return (
                         <div key={order.id} className="bg-white rounded-3xl overflow-hidden border border-gray-200 shadow-lg">
-                            {/* Estado */}
                             <div className={`${si.bg} px-5 py-3 flex items-center gap-2 border-b border-gray-100`}>
                                 <i className={`fas ${si.icon} ${si.color} text-base`}></i>
                                 <span className={`text-base font-bold ${si.color}`}>{si.label}</span>
                                 <span className="ml-auto text-xs text-gray-500">{limaDate(order.date).toLocaleDateString('es-PE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
                             </div>
                             <div className="p-5">
-                                {/* Cliente + llamada */}
                                 <div className="flex items-center justify-between mb-1">
                                     <div>
                                         <p className="font-bold text-gray-800 text-lg">{order.userName}</p>
@@ -2615,7 +2528,6 @@ const VistaMoto = ({ orders, currentUser, onStatusChange, onLogout, success, set
                                     <PhoneButton userId={order.userId}/>
                                 </div>
 
-                                {/* Dirección */}
                                 {addr&&<div className="bg-blue-50 rounded-2xl p-4 my-4 border border-blue-100">
                                     <p className="text-cyan-700 text-xs font-bold mb-1 uppercase tracking-wide"><i className="fas fa-map-marker-alt mr-1"></i>Dirección de recojo</p>
                                     <p className="text-gray-800 text-base font-semibold">{addr.address}</p>
@@ -2623,7 +2535,6 @@ const VistaMoto = ({ orders, currentUser, onStatusChange, onLogout, success, set
                                     <MapButton address={addr.address} district={addr.district}/>
                                 </div>}
 
-                                {/* Mascotas/exámenes */}
                                 <div className="space-y-2 mb-5">
                                     {order.items.map((item,i)=>(
                                         <div key={i} className="bg-gray-50 rounded-2xl px-4 py-3 flex items-center gap-3 border border-gray-100">
@@ -2636,7 +2547,6 @@ const VistaMoto = ({ orders, currentUser, onStatusChange, onLogout, success, set
                                     ))}
                                 </div>
 
-                                {/* Botón acción principal — solo si no es manual */}
                                 {order.isManual&&<div className="w-full bg-amber-50 border border-amber-200 text-amber-700 py-3 px-4 rounded-2xl text-sm font-semibold text-center"><i className="fas fa-info-circle mr-2"></i>El staff está manejando este pedido</div>}
                                 {nextMap[order.status]&&!order.isManual&&<button
                                     onClick={async()=>{await onStatusChange(order.id,nextMap[order.status]);setSuccess('✅ Estado actualizado');setTimeout(()=>setSuccess(''),3000);}}
@@ -2653,7 +2563,6 @@ const VistaMoto = ({ orders, currentUser, onStatusChange, onLogout, success, set
     );
 };
 
-// ── SECCIÓN USUARIOS ──────────────────────────────
 const CODIGO_SECRETO = '12345678';
 
 const SeccionUsuarios = ({ currentUser }) => {
@@ -2764,7 +2673,6 @@ const SeccionUsuarios = ({ currentUser }) => {
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            {/* Recuadro de color con boton de accion — solo móvil */}
             <div className="md:hidden mx-2 mt-4 mb-2 rounded-xl p-1 bg-gradient-to-r from-rose-500 to-rose-700 shadow-lg flex items-center gap-2 flex-shrink-0">
                 <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0"><i className="fas fa-users text-white"></i></div>
                 <span className="text-white font-bold flex-1">Usuarios</span>
@@ -2806,7 +2714,6 @@ const SeccionUsuarios = ({ currentUser }) => {
                 </div>
             </div>
 
-            {/* Modal editar usuario */}
             {editUser && (
                 <ModalPortal>
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[300] p-4">
@@ -2842,7 +2749,6 @@ const SeccionUsuarios = ({ currentUser }) => {
                 </ModalPortal>
             )}
 
-            {/* Modal confirmar eliminar */}
             {confirmDel && (
                 <ModalPortal>
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[300] p-4">
@@ -2861,7 +2767,6 @@ const SeccionUsuarios = ({ currentUser }) => {
                 </ModalPortal>
             )}
 
-            {/* Modal crear usuario */}
             {showForm && (
                 <ModalPortal>
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[300] p-4">
@@ -2911,7 +2816,6 @@ const SeccionUsuarios = ({ currentUser }) => {
     );
 };
 
-// ── APP PRINCIPAL ─────────────────────────────────
 const App = () => {
     const [auth, setAuth]           = useState(false);
     const [user, setUser]           = useState(null);
@@ -2995,7 +2899,6 @@ const App = () => {
                 osc.stop(ctx.currentTime + start + duration + 0.05);
             };
             const fire = () => {
-                // Campanita "ding-dong" repetida tres veces — más larga y notoria
                 tone(880, 0,    0.35);
                 tone(660, 0.38, 0.45);
                 tone(880, 1.10, 0.35);
@@ -3114,7 +3017,6 @@ const App = () => {
 
     return (
         <div className="bg-gray-100 flex flex-col" style={{height:'100dvh',overflow:'hidden'}}>
-            {/* Toast de pedido nuevo */}
             {nuevoPedidoAlerta && (
                 <div className="fixed top-4 right-4 z-50 bg-white border border-cyan-200 shadow-lg rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer animate-pulse"
                      style={{maxWidth:'320px'}}
@@ -3128,7 +3030,6 @@ const App = () => {
                     </div>
                 </div>
             )}
-            {/* Header - estilo LATEST (responsive: menos padding y sin subtítulo en móvil) */}
             <div className="bg-white border-b border-gray-200 px-3 md:px-6 py-1.5 md:py-3 flex items-center justify-between flex-shrink-0 shadow-sm">
                 <div className="flex items-center gap-2 cursor-pointer" onClick={()=>setView('inicio')}>
                     <img src="logo_inulaboratorios.jpg" alt="Logo" className="h-9 w-9 md:h-11 md:w-11 object-contain rounded-full" onError={e=>{e.target.style.display='none';}}/>
@@ -3142,9 +3043,7 @@ const App = () => {
                     <button onClick={()=>setView('configuracion')} className="w-8 h-8 md:w-9 md:h-9 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600 border border-gray-200 transition-colors flex-shrink-0"><i className="fas fa-bars text-sm"></i></button>
                 </div>
             </div>
-            {/* Layout */}
             <div className="flex flex-1 min-h-0">
-                {/* Sidebar - estilo LATEST (solo escritorio, oculto en móvil) */}
                 <div className="hidden md:flex w-52 bg-white border-r border-gray-200 flex-col flex-shrink-0">
                     <nav className="flex-1 p-3 space-y-1 overflow-y-auto hide-scrollbar">
                         {NAV.map(n => (
@@ -3164,7 +3063,6 @@ const App = () => {
                         </button>
                     </div>
                 </div>
-                {/* Contenido */}
                 <div className="flex-1 flex flex-col min-w-0 min-h-0">
                     <div className="flex-1 min-h-0 overflow-hidden" style={{position:'relative'}}>
                         {view==='inicio'       && <SeccionInicio     orders={orders} user={user} onGoTo={(s)=>setView(s)} />}
@@ -3193,7 +3091,6 @@ const App = () => {
                     </div>
                 </div>
             </div>
-            {/* Barra inferior — solo móvil, deslizable horizontal con las 7 secciones */}
             <div className="flex md:hidden flex-shrink-0 bg-white border-t border-gray-200 overflow-x-auto hide-scrollbar" style={{paddingBottom:'env(safe-area-inset-bottom, 0px)'}}>
                 {NAV.map(n => (
                     <button key={n.id} onClick={()=>setView(n.id)}
@@ -3212,7 +3109,6 @@ const App = () => {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App />);
-// Ocultar splash cuando React termina de montar
 requestAnimationFrame(() => {
     const splash = document.getElementById('splash');
     if (splash) { splash.style.transition = 'opacity 0.3s'; splash.style.opacity = '0'; setTimeout(() => splash.remove(), 300); }
@@ -3220,7 +3116,6 @@ requestAnimationFrame(() => {
     
     </script>
     <script>
-    // Registro del Service Worker (PWA) — sin JSX, script normal
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('sw.js').catch(err => {
