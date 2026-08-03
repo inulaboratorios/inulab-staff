@@ -1554,7 +1554,7 @@ const SeccionPacientes = ({ orders }) => {
                         <PetPhoto photo={selPet.photo} size="xl"/>
                         <div>
                             <div className="flex items-center gap-2">
-                                <p className="text-gray-800 font-bold text-lg">{selPet.name}</p>
+                                <p className="text-gray-800 font-bold text-lg">{selPet.name}{selPet.lastName?` ${selPet.lastName}`:''}</p>
                                 <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold">{filteredExams.length} exámenes</span>
                             </div>
                             <p className="text-gray-500 text-sm">Cliente: {selPet.owner||selPet.ownerClient}</p>
