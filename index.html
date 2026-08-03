@@ -1289,6 +1289,16 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight }) => {
     const [showAntecedentes, setShowAntecedentes] = useState(false);
     const [manualMode, setManualMode] = useState(order.isManual || false);
     const si = getStatusInfo(order.status);
+    // NUEVO — el pedido pasa a "completed" en el backend con el PRIMER examen
+    // enviado (para habilitar facturación cuanto antes), pero visualmente el
+    // badge no debe decir "Completado" hasta que TODOS los exámenes ya se
+    // hayan enviado al cliente. Mientras falten, mostramos cuántos faltan.
+    const sentCount = order.items.filter(i=>i.isSent).length;
+    const totalCount = order.items.length;
+    const allSent = sentCount===totalCount;
+    const badgeInfo = (order.status==='completed'&&!allSent)
+        ? {label:`Falta enviar ${totalCount-sentCount} de ${totalCount}`, bg:'bg-amber-100', color:'text-amber-700', icon:'fa-hourglass-half'}
+        : si;
     return (
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 transition-all" style={highlight?{animation:'highlightFlash 1.4s ease-in-out'}:{}}>
             <div className="flex items-start justify-between gap-2 mb-3">
@@ -1301,8 +1311,8 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight }) => {
                     {order.motoName&&!manualMode&&<p className="text-cyan-700 text-xs mt-0.5"><i className="fas fa-motorcycle mr-1"></i>{order.motoName}</p>}
                 </div>
                 <div className="flex flex-col items-end gap-1.5">
-                    {!(manualMode&&order.status==='assigned')&&<span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${si.bg} ${si.color}`}>
-                        <i className={`fas ${si.icon} text-xs`}></i>{si.label}
+                    {!(manualMode&&order.status==='assigned')&&<span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${badgeInfo.bg} ${badgeInfo.color}`}>
+                        <i className={`fas ${badgeInfo.icon} text-xs`}></i>{badgeInfo.label}
                     </span>}
                     {order.status !== 'completed' && (
                         <button onClick={async()=>{ const next=!manualMode; setManualMode(next); try{ await api.updateManual(order.id, next); }catch(e){ setManualMode(!next); } }}
@@ -1322,9 +1332,9 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight }) => {
                                 <p className="text-gray-400 text-xs truncate"><i className="fas fa-map-marker-alt mr-1"></i>{item.address?.address&&item.address.address!=='N/A'?`${item.address.address}, `:''}{item.address?.district}</p>
                             </div>
                             {item.tomaMuestra&&<span className="flex-shrink-0 text-xs bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg px-2 py-1 font-medium"><i className="fas fa-syringe mr-1"></i>Toma solicitada</span>}
-                            {order.status==='processing'&&!item.pdfData&&<button onClick={()=>setUploadItem(item)} title="Subir examen" className="w-8 h-8 bg-orange-100 hover:bg-orange-200 rounded-lg flex items-center justify-center text-orange-600 transition-colors flex-shrink-0"><i className="fas fa-file-upload text-xs"></i></button>}
+                            {!item.pdfData&&<button onClick={()=>setUploadItem(item)} title="Subir examen" className="w-8 h-8 bg-orange-100 hover:bg-orange-200 rounded-lg flex items-center justify-center text-orange-600 transition-colors flex-shrink-0"><i className="fas fa-file-upload text-xs"></i></button>}
                             {item.pdfData&&<button onClick={()=>setShowPdf({url:item.pdfData,title:item.exam?.name,sub:getPetFullName(item.pet),id:order.id,userId:order.userId,clientName:order.userName,examName:item.exam?.name,petName:getPetFullName(item.pet)})} className="w-8 h-8 bg-purple-100 hover:bg-purple-200 rounded-lg flex items-center justify-center text-purple-600 transition-colors flex-shrink-0"><i className="fas fa-eye text-xs"></i></button>}
-                            {order.status==='processing'&&item.pdfData&&!item.isSent&&<button onClick={async()=>{setSendingItemId(item.id);try{await api.enviarExamen(order.id,item.id);onSuccess&&onSuccess('✅ Examen enviado al cliente');}catch(e){alert('Error al enviar: '+(e.message||''));}setSendingItemId(null);}} disabled={sendingItemId===item.id} title="Enviar examen al cliente" className="w-8 h-8 bg-emerald-100 hover:bg-emerald-200 rounded-lg flex items-center justify-center text-emerald-600 transition-colors flex-shrink-0 disabled:opacity-50"><i className={`fas ${sendingItemId===item.id?'fa-spinner fa-spin':'fa-paper-plane'} text-xs`}></i></button>}
+                            {item.pdfData&&!item.isSent&&<button onClick={async()=>{setSendingItemId(item.id);try{await api.enviarExamen(order.id,item.id);onSuccess&&onSuccess('✅ Examen enviado al cliente');}catch(e){alert('Error al enviar: '+(e.message||''));}setSendingItemId(null);}} disabled={sendingItemId===item.id} title="Enviar examen al cliente" className="w-8 h-8 bg-emerald-100 hover:bg-emerald-200 rounded-lg flex items-center justify-center text-emerald-600 transition-colors flex-shrink-0 disabled:opacity-50"><i className={`fas ${sendingItemId===item.id?'fa-spinner fa-spin':'fa-paper-plane'} text-xs`}></i></button>}
                             {item.isSent&&<span title="Ya enviado al cliente" className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white flex-shrink-0"><i className="fas fa-check text-xs"></i></span>}
                         </div>
                     ))}
