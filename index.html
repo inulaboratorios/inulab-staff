@@ -1278,7 +1278,7 @@ const TrackingModal = ({ order, onClose, onCommentSaved }) => {
 
 
 
-const OrderCard = ({ order, onStatusChange, onSuccess, highlight }) => {
+const OrderCard = ({ order, onStatusChange, onSuccess, highlight, hideRecojo }) => {
     const [uploadItem, setUploadItem] = useState(null);
     const [sendingItemId, setSendingItemId] = useState(null);
     const [showInvoice, setShowInvoice] = useState(false);
@@ -1353,13 +1353,13 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight }) => {
             </div>
             {order.status==='pending'&&!manualMode&&<p className="text-amber-600 text-xs mb-2"><i className="fas fa-clock mr-1"></i>Esperando moto...</p>}
             {order.comment&&<p className="text-xs text-gray-500 mb-2"><i className="fas fa-comment-alt mr-1"></i>{order.comment}</p>}
-            {order.items?.some(it=>it.tomaMuestra)
+            {!hideRecojo&&(order.items?.some(it=>it.tomaMuestra)
                 ? <div className="flex items-center gap-2 mb-2">
                     <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1 inline-flex items-center gap-1"><i className="fas fa-syringe mr-1"></i>Toma de muestra solicitada</p>
                     <WhatsAppButton userId={order.userId}/>
                   </div>
                 : <p className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 mb-2 inline-flex items-center gap-1"><i className="fas fa-box mr-1"></i>Para Recojo</p>
-            }
+            )}
             {order.invoiceRequested&&<p className="text-xs mb-2"><i className={`fas ${order.documentType==='boleta'?'fa-receipt text-cyan-600':'fa-file-invoice-dollar text-amber-600'} mr-1`}></i><span className={order.documentType==='boleta'?'text-cyan-700':'text-amber-700'}>{order.documentType==='boleta'?'Boleta':'Factura'} solicitada</span>{order.billingIdentifierValue&&<span className="text-gray-500 font-normal"> · {order.documentType==='boleta'?'DNI':'RUC'}: {order.billingIdentifierValue}</span>}</p>}
             <div className="flex items-center justify-between gap-2 mt-2">
                 <div className="flex flex-wrap gap-2">
@@ -1396,8 +1396,8 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight }) => {
 
 const SeccionInicio = ({ orders, user, onGoTo }) => {
     const [selPdf, setSelPdf] = useState(null);
-    const pending   = orders.filter(o => (o.status !== 'completed' || !o.invoicePdf) && o.estadoFacturacion !== 'por_consolidar' && o.estadoFacturacion !== 'consolidado');
-    const completed = orders.filter(o => (o.status === 'completed' && o.invoicePdf) || o.estadoFacturacion === 'por_consolidar' || o.estadoFacturacion === 'consolidado').sort((a,b) => new Date(b.completedAt||b.date)-new Date(a.completedAt||a.date));
+    const pending   = orders.filter(o => o.status !== 'completed');
+    const completed = orders.filter(o => o.status === 'completed' && o.invoicePdf).sort((a,b) => new Date(b.completedAt||b.date)-new Date(a.completedAt||a.date));
     const lastResultOrder  = completed.find(o => o.items.some(it => it.pdfData));
     const lastInvoiceOrder = completed.find(o => o.invoicePdf);
     return (
@@ -1444,8 +1444,8 @@ const SeccionInicio = ({ orders, user, onGoTo }) => {
 
 const SeccionPedidos = ({ orders, onStatusChange, onSuccess, onRefresh }) => {
     const [tab, setTab] = useState('pending'); const [search, setSearch] = useState(''); const [showSearch, setShowSearch] = useState(false);
-    const pending   = orders.filter(o => (o.status !== 'completed' || !o.invoicePdf) && o.estadoFacturacion !== 'por_consolidar' && o.estadoFacturacion !== 'consolidado');
-    const completed = orders.filter(o => (o.status === 'completed' && o.invoicePdf) || o.estadoFacturacion === 'por_consolidar' || o.estadoFacturacion === 'consolidado').sort((a,b) => new Date(b.completedAt||b.date)-new Date(a.completedAt||a.date));
+    const pending   = orders.filter(o => o.status !== 'completed');
+    const completed = orders.filter(o => o.status === 'completed' && o.invoicePdf).sort((a,b) => new Date(b.completedAt||b.date)-new Date(a.completedAt||a.date));
     const list = (tab==='pending'?pending:completed).filter(o => !search||o.userName.toLowerCase().includes(search.toLowerCase())||o.items.some(it=>it.exam?.name?.toLowerCase().includes(search.toLowerCase())||it.pet?.name?.toLowerCase().includes(search.toLowerCase())));
     return (
         <div className="flex flex-col h-full">
@@ -1988,7 +1988,7 @@ const SeccionPorConsolidar = ({ onSuccess, onBack }) => {
     return null;
 };
 
-const SeccionFacturacion = ({ orders, onRefresh }) => {
+const SeccionFacturacion = ({ orders, onRefresh, onStatusChange, onSuccess }) => {
     const [search, setSearch]         = useState('');
     const [showSearchFacturacion, setShowSearchFacturacion] = useState(false);
     const [filterDay, setFilterDay]   = useState('');
@@ -1996,10 +1996,15 @@ const SeccionFacturacion = ({ orders, onRefresh }) => {
     const [filterYear, setFilterYear]   = useState('');
     const [selPdf, setSelPdf] = useState(null);
     const [subSeccion, setSubSeccion] = useState('comprobantes'); // 'comprobantes' | 'por_consolidar'
-    const [facSubTab, setFacSubTab] = useState('entregadas'); // 'entregadas' | 'diferidas'
+    const [facSubTab, setFacSubTab] = useState('entregadas'); // 'entregadas' | 'pendientes'
 
     const invoices = orders.filter(o => o.invoicePdf).sort((a,b) => new Date(b.completedAt||b.date)-new Date(a.completedAt||a.date));
-    const diferidas = orders.filter(o => o.estadoFacturacion === 'por_consolidar').sort((a,b) => new Date(b.completedAt||b.date)-new Date(a.completedAt||a.date));
+    // NUEVO — "Pendientes" ahora agrupa TODO lo que ya tiene resultados enviados
+    // pero todavía no tiene factura subida: tanto los que esperan una decisión
+    // (Subir factura / Diferir) como los que ya se marcaron "Por consolidar".
+    // Antes esto vivía repartido entre Pedidos→Pendientes (sin decisión) y
+    // Facturación→Diferidas (ya diferidos) — ahora todo queda junto acá.
+    const pendientesFacturar = orders.filter(o => o.status === 'completed' && !o.invoicePdf).sort((a,b) => new Date(b.completedAt||b.date)-new Date(a.completedAt||a.date));
 
     const years = [...new Set(invoices.map(o => new Date(o.completedAt||o.date).getFullYear()))].sort((a,b)=>b-a);
     const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -2031,7 +2036,7 @@ const SeccionFacturacion = ({ orders, onRefresh }) => {
                 <div className={`staff-search-slide-filters ${showSearchFacturacion?'open':''}`}>
                     <div className="flex gap-2 mb-2">
                         <button onClick={()=>setFacSubTab('entregadas')} className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-colors ${facSubTab==='entregadas'?'bg-amber-500 text-white shadow':'bg-gray-100 text-gray-600'}`}>Entregadas</button>
-                        <button onClick={()=>setFacSubTab('diferidas')} className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-colors ${facSubTab==='diferidas'?'bg-violet-500 text-white shadow':'bg-gray-100 text-gray-600'}`}>Diferidas</button>
+                        <button onClick={()=>setFacSubTab('diferidas')} className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-colors ${facSubTab==='diferidas'?'bg-violet-500 text-white shadow':'bg-gray-100 text-gray-600'}`}>Pendientes</button>
                     </div>
                     <div className="relative mb-2">
                         <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
@@ -2057,7 +2062,7 @@ const SeccionFacturacion = ({ orders, onRefresh }) => {
                 <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-amber-600 font-semibold text-sm flex items-center gap-2 mr-1"><i className="fas fa-file-invoice-dollar"></i>Facturación</span>
                     <button onClick={()=>setFacSubTab('entregadas')} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${facSubTab==='entregadas'?'bg-amber-500 text-white':'bg-gray-100 text-gray-600'}`}>Entregadas</button>
-                    <button onClick={()=>setFacSubTab('diferidas')} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${facSubTab==='diferidas'?'bg-violet-600 text-white':'bg-gray-100 text-gray-600'}`}>Diferidas</button>
+                    <button onClick={()=>setFacSubTab('diferidas')} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${facSubTab==='diferidas'?'bg-violet-600 text-white':'bg-gray-100 text-gray-600'}`}>Pendientes</button>
                     <div className="relative flex-1 min-w-36">
                         <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
                         <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar cliente..."
@@ -2090,28 +2095,18 @@ const SeccionFacturacion = ({ orders, onRefresh }) => {
                 )}
             </div>
             <div className={`flex-1 overflow-y-auto pt-3 md:pt-4 px-4 pb-4 hide-scrollbar ${(showSearchFacturacion&&!search&&!filterDay&&!filterMonth&&!filterYear)?'hidden':''}`}>
-                {(facSubTab==='diferidas' ? diferidas.length===0 : filtered.length===0)?(
+                {facSubTab==='diferidas'&&pendientesFacturar.some(o=>o.estadoFacturacion==='por_consolidar')&&(
+                    <button onClick={()=>setSubSeccion('por_consolidar')} className="w-full mb-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold flex items-center justify-center gap-2"><i className="fas fa-layer-group"></i>Generar factura consolidada</button>
+                )}
+                {(facSubTab==='diferidas' ? pendientesFacturar.length===0 : filtered.length===0)?(
                     facSubTab==='diferidas'
-                    ? <div className="bg-white rounded-xl p-8 text-center border border-gray-200"><i className="fas fa-layer-group text-gray-300 text-3xl mb-2 block"></i><p className="text-gray-600">Sin pedidos diferidos a consolidar</p></div>
+                    ? <div className="bg-white rounded-xl p-8 text-center border border-gray-200"><i className="fas fa-clock text-gray-300 text-3xl mb-2 block"></i><p className="text-gray-600">Sin pedidos pendientes de facturar</p></div>
                     : <div className="text-center py-12"><i className="fas fa-receipt text-4xl mb-2 block text-gray-300"></i><p className="text-gray-600">Sin comprobantes</p></div>
                 ):(
                     <div className="pb-6">
                     {facSubTab === 'diferidas' ? (
-                        <div className="space-y-3">
-                            {diferidas.map(o => (
-                                <div key={o.id} onClick={()=>setSubSeccion('por_consolidar')} className="bg-white rounded-xl p-4 border border-violet-200 cursor-pointer hover:shadow-md transition-shadow">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-violet-100"><i className="fas fa-layer-group text-violet-600 text-lg"></i></div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-gray-800 font-medium text-sm truncate">{o.userName}</p>
-                                            <p className="text-gray-600 text-xs">{o.documentType==='boleta'?'Boleta':'Factura'} · Diferida</p>
-                                            <p className="text-gray-400 text-xs">{limaDate(o.completedAt||o.date).toLocaleDateString('es-PE',{day:'numeric',month:'short',year:'numeric'})}</p>
-                                        </div>
-                                        <span className="bg-violet-100 text-violet-700 text-xs px-2 py-1 rounded-full font-medium">Por consolidar</span>
-                                    </div>
-                                    {o.items?.length > 0 && <div className="mt-2 border-t pt-2 space-y-1">{o.items.map((it,i)=><p key={i} className="text-xs text-gray-500">{it.pet?.photo} {getPetFullName(it.pet)} · {it.exam?.name}</p>)}</div>}
-                                </div>
-                            ))}
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                            {pendientesFacturar.map(o => <OrderCard key={o.id} order={o} onStatusChange={onStatusChange} onSuccess={onSuccess} hideRecojo/>)}
                         </div>
                     ) : (
                         <div className="pb-6">
@@ -3088,7 +3083,7 @@ const App = () => {
                         {view==='pedidos'       && <SeccionPedidos    orders={orders} onStatusChange={handleStatusChange} onSuccess={m=>{setSuccess(m);setTimeout(()=>setSuccess(''),4000);loadOrders();}} onRefresh={loadOrders}/>}
                         {view==='pacientes'     && <SeccionPacientes  orders={orders}/>}
                         {view==='resultados'    && <SeccionResultados orders={orders}/>}
-                        {view==='facturacion'   && <SeccionFacturacion orders={orders}/>}
+                        {view==='facturacion'   && <SeccionFacturacion orders={orders} onStatusChange={handleStatusChange} onSuccess={m=>{setSuccess(m);setTimeout(()=>setSuccess(''),4000);loadOrders();}} onRefresh={loadOrders}/>}
                         {view==='catalogo'      && <SeccionCatalogo/>}
                         {view==='usuarios'      && <SeccionUsuarios currentUser={user}/>}
                         {view==='configuracion' && (
