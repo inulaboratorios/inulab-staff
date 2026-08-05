@@ -1308,7 +1308,12 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight, hideRecojo, hi
     // antes de que la muestra siquiera llegara al laboratorio. El botón sigue
     // visible siempre (para que el admin sepa que existe el paso), pero queda
     // bloqueado/atenuado con un tooltip explicando qué falta.
-    const canUploadResults = ['processing','results_uploaded','completed'].includes(order.status);
+    // NUEVO — el toggle "Manual" (ya existente, botón rojo en la tarjeta)
+    // ahora también sirve para que el staff pueda subir el resultado sin
+    // pasar por todos los pasos de tracking, para los pedidos/clientes que
+    // piden entrega rápida. manualMode se usa (no order.isManual) para que
+    // el botón se desbloquee al toque, sin esperar a refrescar los pedidos.
+    const canUploadResults = manualMode || ['processing','results_uploaded','completed'].includes(order.status);
     const badgeInfo = (order.status==='completed'&&sentCount>0&&!allSent)
         ? {label:`Falta enviar ${totalCount-sentCount} de ${totalCount}`, bg:'bg-amber-100', color:'text-amber-700', icon:'fa-hourglass-half'}
         : si;
@@ -1346,7 +1351,7 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight, hideRecojo, hi
                             </div>
                             {item.tomaMuestra&&<span className="flex-shrink-0 text-xs bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg px-2 py-1 font-medium"><i className="fas fa-syringe mr-1"></i>Toma solicitada</span>}
                             {!hideItemActions&&<>
-                            {!item.pdfData&&!isLegacyCompleted&&<button onClick={()=>canUploadResults&&setUploadItem(item)} disabled={!canUploadResults} title={canUploadResults?"Subir examen":"Primero dale clic a \"Procesar\" para poder subir el resultado"} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0 ${canUploadResults?'bg-orange-100 hover:bg-orange-200 text-orange-600 cursor-pointer':'bg-gray-100 text-gray-300 cursor-not-allowed'}`}><i className="fas fa-file-upload text-xs"></i></button>}
+                            {!item.pdfData&&!isLegacyCompleted&&<button onClick={()=>canUploadResults&&setUploadItem(item)} disabled={!canUploadResults} title={canUploadResults?"Subir examen":"Dale clic a \"Procesar\", o activa \"Manual\" para subir de una vez"} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0 ${canUploadResults?'bg-orange-100 hover:bg-orange-200 text-orange-600 cursor-pointer':'bg-gray-100 text-gray-300 cursor-not-allowed'}`}><i className="fas fa-file-upload text-xs"></i></button>}
                             {item.pdfData&&<button onClick={()=>setUploadItem(item)} title="Reemplazar PDF de este examen" className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 transition-colors flex-shrink-0"><i className="fas fa-sync-alt text-xs"></i></button>}
                             {item.pdfData&&<button onClick={()=>setShowPdf({url:item.pdfData,title:item.exam?.name,sub:getPetFullName(item.pet),id:order.id,userId:order.userId,clientName:order.userName,examName:item.exam?.name,petName:getPetFullName(item.pet)})} className="w-8 h-8 bg-purple-100 hover:bg-purple-200 rounded-lg flex items-center justify-center text-purple-600 transition-colors flex-shrink-0"><i className="fas fa-eye text-xs"></i></button>}
                             {item.pdfData&&!item.isSent&&!isLegacyCompleted&&<button onClick={async()=>{setSendingItemId(item.id);try{await api.enviarExamen(order.id,item.id);onSuccess&&onSuccess('✅ Examen enviado al cliente');}catch(e){alert('Error al enviar: '+(e.message||''));}setSendingItemId(null);}} disabled={sendingItemId===item.id} title="Enviar examen al cliente" className="w-8 h-8 bg-emerald-100 hover:bg-emerald-200 rounded-lg flex items-center justify-center text-emerald-600 transition-colors flex-shrink-0 disabled:opacity-50"><i className={`fas ${sendingItemId===item.id?'fa-spinner fa-spin':'fa-paper-plane'} text-xs`}></i></button>}
