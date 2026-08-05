@@ -405,7 +405,7 @@ const api = {
     },
     login:            (u, p)    => api.call('POST', '/api/Auth/login', { username: u, password: p }),
     me:               ()        => api.call('GET',  '/api/Auth/me'),
-    getOrders:        ()        => api.call('GET',  '/api/Orders'),
+    getOrders:        ()        => api.call('GET',  '/api/Orders?pageSize=10000'),
     updateStatus:     (id, s)   => api.call('PUT',  `/api/Orders/${id}/status`, { status: s }),
     assignMotorizado: (id, mId) => api.call('PUT',  `/api/Orders/${id}/assign-motorizado`, { motorizadoId: mId }),
     uploadResult:     (id, fd)  => api.upload(`/api/Orders/${id}/upload-result`, fd),
