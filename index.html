@@ -1447,7 +1447,11 @@ const SeccionInicio = ({ orders, user, onGoTo }) => {
 const SeccionPedidos = ({ orders, onStatusChange, onSuccess, onRefresh }) => {
     const [tab, setTab] = useState('pending'); const [search, setSearch] = useState(''); const [showSearch, setShowSearch] = useState(false);
     const pending   = orders.filter(o => o.status !== 'completed');
-    const completed = orders.filter(o => o.status === 'completed' && o.invoicePdf).sort((a,b) => new Date(b.completedAt||b.date)-new Date(a.completedAt||a.date));
+    // Historial debe mostrar TODO pedido con el examen ya completado (resultado
+    // enviado al cliente), tenga o no la factura subida todavía — antes exigía
+    // "&& o.invoicePdf" y eso escondía de Historial (y de su botón de resubir
+    // resultado) a los pedidos que ya están en Facturación > Pendientes.
+    const completed = orders.filter(o => o.status === 'completed').sort((a,b) => new Date(b.completedAt||b.date)-new Date(a.completedAt||a.date));
     const list = (tab==='pending'?pending:completed).filter(o => !search||o.userName.toLowerCase().includes(search.toLowerCase())||o.items.some(it=>it.exam?.name?.toLowerCase().includes(search.toLowerCase())||it.pet?.name?.toLowerCase().includes(search.toLowerCase())));
     return (
         <div className="flex flex-col h-full">
