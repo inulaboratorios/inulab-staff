@@ -1278,7 +1278,7 @@ const TrackingModal = ({ order, onClose, onCommentSaved }) => {
 
 
 
-const OrderCard = ({ order, onStatusChange, onSuccess, highlight, hideRecojo }) => {
+const OrderCard = ({ order, onStatusChange, onSuccess, highlight, hideRecojo, hideItemActions }) => {
     const [uploadItem, setUploadItem] = useState(null);
     const [sendingItemId, setSendingItemId] = useState(null);
     const [showInvoice, setShowInvoice] = useState(false);
@@ -1338,11 +1338,13 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight, hideRecojo }) 
                                 <p className="text-gray-400 text-xs truncate"><i className="fas fa-map-marker-alt mr-1"></i>{item.address?.address&&item.address.address!=='N/A'?`${item.address.address}, `:''}{item.address?.district}</p>
                             </div>
                             {item.tomaMuestra&&<span className="flex-shrink-0 text-xs bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg px-2 py-1 font-medium"><i className="fas fa-syringe mr-1"></i>Toma solicitada</span>}
+                            {!hideItemActions&&<>
                             {!item.pdfData&&!isLegacyCompleted&&<button onClick={()=>setUploadItem(item)} title="Subir examen" className="w-8 h-8 bg-orange-100 hover:bg-orange-200 rounded-lg flex items-center justify-center text-orange-600 transition-colors flex-shrink-0"><i className="fas fa-file-upload text-xs"></i></button>}
                             {item.pdfData&&<button onClick={()=>setUploadItem(item)} title="Reemplazar PDF de este examen" className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 transition-colors flex-shrink-0"><i className="fas fa-sync-alt text-xs"></i></button>}
                             {item.pdfData&&<button onClick={()=>setShowPdf({url:item.pdfData,title:item.exam?.name,sub:getPetFullName(item.pet),id:order.id,userId:order.userId,clientName:order.userName,examName:item.exam?.name,petName:getPetFullName(item.pet)})} className="w-8 h-8 bg-purple-100 hover:bg-purple-200 rounded-lg flex items-center justify-center text-purple-600 transition-colors flex-shrink-0"><i className="fas fa-eye text-xs"></i></button>}
                             {item.pdfData&&!item.isSent&&!isLegacyCompleted&&<button onClick={async()=>{setSendingItemId(item.id);try{await api.enviarExamen(order.id,item.id);onSuccess&&onSuccess('✅ Examen enviado al cliente');}catch(e){alert('Error al enviar: '+(e.message||''));}setSendingItemId(null);}} disabled={sendingItemId===item.id} title="Enviar examen al cliente" className="w-8 h-8 bg-emerald-100 hover:bg-emerald-200 rounded-lg flex items-center justify-center text-emerald-600 transition-colors flex-shrink-0 disabled:opacity-50"><i className={`fas ${sendingItemId===item.id?'fa-spinner fa-spin':'fa-paper-plane'} text-xs`}></i></button>}
                             {item.isSent&&<span title="Ya enviado al cliente" className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white flex-shrink-0"><i className="fas fa-check text-xs"></i></span>}
+                            </>}
                         </div>
                     ))}
                 </div>
@@ -2106,7 +2108,7 @@ const SeccionFacturacion = ({ orders, onRefresh, onStatusChange, onSuccess }) =>
                     <div className="pb-6">
                     {facSubTab === 'diferidas' ? (
                         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                            {pendientesFacturar.map(o => <OrderCard key={o.id} order={o} onStatusChange={onStatusChange} onSuccess={onSuccess} hideRecojo/>)}
+                            {pendientesFacturar.map(o => <OrderCard key={o.id} order={o} onStatusChange={onStatusChange} onSuccess={onSuccess} hideRecojo hideItemActions/>)}
                         </div>
                     ) : (
                         <div className="pb-6">
