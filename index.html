@@ -1963,7 +1963,7 @@ const SeccionPorConsolidar = ({ onSuccess, onBack }) => {
                                 </div>
                                 <div className="flex-1">
                                     <p className="font-semibold text-gray-800 text-sm">Pedido del {fmt(p.createdAt)}</p>
-                                    <p className="text-gray-500 text-xs mt-1">{(p.examenes||[]).join(', ') || p.serviceName}</p>
+                                    <p className="text-gray-500 text-xs mt-1">{(p.items||[]).map(it=>`${getPetFullName(it.pet)} · ${it.exam?.name||''}`).join(', ') || p.serviceName}</p>
                                 </div>
                             </div>
                         </div>
