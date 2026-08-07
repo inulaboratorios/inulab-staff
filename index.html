@@ -2598,8 +2598,6 @@ const VistaMoto = ({ orders, currentUser, onStatusChange, onLogout, success, set
     );
 };
 
-const CODIGO_SECRETO = '12345678';
-
 const SeccionUsuarios = ({ currentUser }) => {
     const [admins, setAdmins] = React.useState([]);
     const [motos, setMotos]   = React.useState([]);
@@ -2664,10 +2662,10 @@ const SeccionUsuarios = ({ currentUser }) => {
         setErr(''); setOk('');
         if (!form.username.trim()) return setErr('El nombre de usuario es requerido');
         if (!form.password.trim()) return setErr('La contraseña es requerida');
-        if (form.codigo !== CODIGO_SECRETO) return setErr('Código secreto incorrecto');
+        if (!form.codigo.trim()) return setErr('El código de autorización es requerido');
         setSaving(true);
         try {
-            await api.registrar({ username: form.username.trim(), password: form.password, type: form.rol });
+            await api.registrar({ username: form.username.trim(), password: form.password, type: form.rol, codigo: form.codigo });
             setOk('✅ Usuario creado correctamente');
             setForm({ username:'', password:'', rol:'admin', codigo:'' });
             setShowForm(false);
