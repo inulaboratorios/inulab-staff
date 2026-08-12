@@ -1530,7 +1530,7 @@ const SeccionPacientes = ({ orders }) => {
     const [petDetails, setPetDetails] = useState({});
 
     React.useEffect(() => {
-        if (selPet?.id && !petDetails[selPet.id]) {
+        if (selPet?.id) {
             api.getPet(selPet.id).then(data => {
                 if (data) setPetDetails(prev => ({...prev, [selPet.id]: data}));
             });
