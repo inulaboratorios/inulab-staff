@@ -713,6 +713,7 @@ const TrackingMap = ({ order, phase }) => {
 
 const PdfViewer = ({ title, subtitle, icon, pdfUrl, date, orderId, userId, clientName, examName, petName, onClose }) => {
     const [blobUrl, setBlobUrl] = React.useState(null);
+    const [downloadName, setDownloadName] = React.useState(null);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState(false);
     const [sending, setSending] = React.useState(false);
@@ -724,7 +725,18 @@ const PdfViewer = ({ title, subtitle, icon, pdfUrl, date, orderId, userId, clien
             setBlobUrl(pdfUrl); setLoading(false); return;
         }
         fetch(pdfUrl, { headers: { 'Authorization': `Bearer ${localStorage.getItem('inulab_token')}` } })
-            .then(r => { if (!r.ok) throw new Error(); return r.blob(); })
+            .then(r => {
+                if (!r.ok) throw new Error();
+                // Lee el nombre real del archivo que Cloudinary manda en
+                // Content-Disposition (gracias a fl_attachment en el backend),
+                // en vez de siempre usar el nombre del examen.
+                const cd = r.headers.get('content-disposition') || '';
+                const match = cd.match(/filename\*?=(?:UTF-8''|")?([^";]+)"?/i);
+                if (match && match[1]) {
+                    try { setDownloadName(decodeURIComponent(match[1])); } catch (e) { setDownloadName(match[1]); }
+                }
+                return r.blob();
+            })
             .then(blob => { setBlobUrl(window.URL.createObjectURL(blob)); setLoading(false); })
             .catch(() => { setError(true); setLoading(false); });
     }, [pdfUrl]);
@@ -732,7 +744,7 @@ const PdfViewer = ({ title, subtitle, icon, pdfUrl, date, orderId, userId, clien
     const handleDownload = () => {
         if (!blobUrl) return;
         const a = document.createElement('a');
-        a.href = blobUrl; a.download = (title || 'documento') + '.pdf';
+        a.href = blobUrl; a.download = downloadName || (title || 'documento') + '.pdf';
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
     };
 
@@ -746,7 +758,7 @@ const PdfViewer = ({ title, subtitle, icon, pdfUrl, date, orderId, userId, clien
         setSending(false);
         if (blobUrl) {
             const a = document.createElement('a');
-            a.href = blobUrl; a.download = (title || 'documento') + '.pdf';
+            a.href = blobUrl; a.download = downloadName || (title || 'documento') + '.pdf';
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
         }
         const nombre = clientName || subtitle || '';
