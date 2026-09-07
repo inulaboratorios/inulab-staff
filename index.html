@@ -412,6 +412,7 @@ const api = {
     login:            (u, p)    => api.call('POST', '/api/Auth/login', { username: u, password: p }),
     me:               ()        => api.call('GET',  '/api/Auth/me'),
     getOrders:        ()        => api.call('GET',  '/api/Orders?pageSize=10000'),
+    createManualOrder:(data)    => api.call('POST', '/api/Orders/manual', data),
     updateStatus:     (id, s)   => api.call('PUT',  `/api/Orders/${id}/status`, { status: s }),
     assignMotorizado: (id, mId) => api.call('PUT',  `/api/Orders/${id}/assign-motorizado`, { motorizadoId: mId }),
     uploadResult:     (id, fd)  => api.upload(`/api/Orders/${id}/upload-result`, fd),
@@ -1296,7 +1297,7 @@ const TrackingModal = ({ order, onClose, onCommentSaved }) => {
 
 
 
-const OrderCard = ({ order, onStatusChange, onSuccess, highlight, hideRecojo, hideItemActions, hideBilling }) => {
+const OrderCard = ({ order, onStatusChange, onSuccess, highlight, hideRecojo, hideItemActions, hideBilling, onNuevoManual }) => {
     const [uploadItem, setUploadItem] = useState(null);
     const [sendingItemId, setSendingItemId] = useState(null);
     const [showInvoice, setShowInvoice] = useState(false);
@@ -1413,6 +1414,7 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight, hideRecojo, hi
                         <button onClick={()=>hasAntecedentes&&setShowAntecedentes(true)} title={hasAntecedentes?'Ver antecedentes clínicos':'Sin antecedentes clínicos'} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${hasAntecedentes?'bg-amber-100 hover:bg-amber-200 text-amber-600 cursor-pointer':'bg-gray-100 text-gray-300 cursor-default'}`}><i className="fas fa-clipboard-list text-xs"></i></button>
                     ); })()}
                     {order.status!=='completed'&&<button onClick={()=>setShowTracking(true)} className="w-8 h-8 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg flex items-center justify-center transition-colors" title="Tracking"><i className="fas fa-motorcycle text-xs"></i></button>}
+                    {onNuevoManual&&<button onClick={onNuevoManual} title="Crear pedido manual (presencial)" className="w-8 h-8 bg-blue-500 hover:bg-blue-600 text-white rounded-lg flex items-center justify-center transition-colors"><i className="fas fa-plus text-xs"></i></button>}
                 </div>
             </div>
             {uploadItem&&<UploadSingleResultModal order={order} item={uploadItem} onClose={()=>setUploadItem(null)} onSuccess={onSuccess}/>}
@@ -1474,8 +1476,178 @@ const SeccionInicio = ({ orders, user, onGoTo }) => {
     );
 };
 
+// NUEVO — Wizard para crear un pedido presencial desde staff (paciente ya
+// existe): 1) buscar paciente 2) seleccionar examen(es) 3) subir PDF por
+// examen y enviar. Usa POST /api/Orders/manual + los mismos endpoints de
+// upload-result/enviar que ya existen para pedidos normales.
+const ManualOrderModal = ({ allPets, onClose, onSuccess }) => {
+    const [step, setStep] = useState('paciente'); // paciente | examenes | pdfs
+    const [search, setSearch] = useState('');
+    const [selectedPet, setSelectedPet] = useState(null);
+    const [catalog, setCatalog] = useState(CATALOG_DEFAULT);
+    const [buscarExamen, setBuscarExamen] = useState('');
+    const [selectedIds, setSelectedIds] = useState(new Set());
+    const [creating, setCreating] = useState(false);
+    const [createdOrder, setCreatedOrder] = useState(null); // { id, items:[{id, examName}] }
+    const [files, setFiles] = useState({}); // itemId -> File
+    const [sending, setSending] = useState(false);
+    const [msg, setMsg] = useState('');
+
+    useEffect(() => {
+        api.getPrecios().then(data => {
+            if (Array.isArray(data) && data.length) {
+                const map = {};
+                data.forEach(p => { map[p.examenId + '|' + p.tipoUsuario] = p; });
+                setCatalog(CATALOG_DEFAULT.map(e => {
+                    const dbEntry = map[e.id + '|' + e.tipo];
+                    return dbEntry ? { ...e, nombre: dbEntry.nombre || e.nombre, precio: dbEntry.precio ?? e.precio } : e;
+                }));
+            }
+        }).catch(() => {});
+    }, []);
+
+    const filteredPets = allPets.filter(p => !search || norm(p.name).includes(norm(search)) || norm(p.owner).includes(norm(search)) || norm(p.ownerClient).includes(norm(search)));
+
+    const catalogoMedico = catalog.filter(e => e.tipo === 'medico');
+    const filteredExams = catalogoMedico.filter(e => !buscarExamen || norm(e.nombre).includes(norm(buscarExamen)) || norm(e.categoria).includes(norm(buscarExamen)));
+    const categorias = [...new Set(filteredExams.map(e => e.categoria))];
+
+    const toggleExam = (id) => setSelectedIds(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+
+    const crearPedido = async () => {
+        const items = catalog.filter(e => selectedIds.has(e.id)).map(e => ({ examName: e.nombre, price: e.precio }));
+        if (items.length === 0) { setMsg('Selecciona al menos un examen'); return; }
+        setCreating(true); setMsg('');
+        try {
+            const data = await api.createManualOrder({ petId: selectedPet.id, items });
+            setCreatedOrder(data);
+            setStep('pdfs');
+        } catch (e) { setMsg('❌ Error: ' + e.message); }
+        setCreating(false);
+    };
+
+    const handleFile = (itemId, e) => {
+        const f = e.target.files[0];
+        if (!f || f.type !== 'application/pdf') return;
+        setFiles(prev => ({ ...prev, [itemId]: f }));
+    };
+
+    const enviarTodo = async () => {
+        if (!createdOrder) return;
+        const faltantes = createdOrder.items.filter(it => !files[it.id]);
+        if (faltantes.length > 0) { setMsg(`Falta subir el PDF de: ${faltantes.map(it => it.examName).join(', ')}`); return; }
+        setSending(true); setMsg('');
+        try {
+            for (const item of createdOrder.items) {
+                const fd = new FormData();
+                fd.append('file', files[item.id]);
+                fd.append('itemId', item.id);
+                await api.uploadResult(createdOrder.id, fd);
+                await api.enviarExamen(createdOrder.id, item.id);
+            }
+            onSuccess('✅ Pedido manual creado y enviado');
+            onClose();
+        } catch (e) { setMsg('❌ Error: ' + e.message); }
+        setSending(false);
+    };
+
+    return (
+        <ModalPortal>
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
+            <div className="bg-white rounded-2xl w-full max-w-lg border border-gray-200 shadow-2xl flex flex-col" style={{maxHeight:'85vh'}}>
+                <div className="p-5 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+                    <div>
+                        <h2 className="text-gray-800 font-bold">Pedido presencial</h2>
+                        <p className="text-gray-600 text-sm">
+                            {step==='paciente'&&'Paso 1 · Buscar paciente'}
+                            {step==='examenes'&&`Paso 2 · Examenes · ${getPetFullName(selectedPet)}`}
+                            {step==='pdfs'&&`Paso 3 · Subir resultados`}
+                        </p>
+                    </div>
+                    <button onClick={onClose} className="w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600"><i className="fas fa-times"></i></button>
+                </div>
+
+                <div className="p-5 overflow-y-auto flex-1">
+                    {step==='paciente'&&(<>
+                        <div className="relative mb-3">
+                            <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                            <input autoFocus value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar mascota o dueño..." className="w-full h-10 pl-9 pr-3 border border-gray-200 focus:border-blue-500 focus:outline-none bg-gray-50 rounded-xl text-sm"/>
+                        </div>
+                        <div className="space-y-2">
+                            {filteredPets.length===0?(<p className="text-gray-400 text-sm text-center py-6">Sin resultados</p>):filteredPets.slice(0,30).map(p=>(
+                                <div key={p.id||p.name} onClick={()=>{setSelectedPet(p);setStep('examenes');}} className="flex items-center gap-3 p-3 rounded-xl cursor-pointer border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all">
+                                    <PetPhoto photo={p.photo} size="md"/>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-gray-800 font-semibold text-sm truncate">{getPetFullName(p)}</p>
+                                        <p className="text-gray-500 text-xs truncate">{p.ownerClient||p.owner}</p>
+                                    </div>
+                                    <i className="fas fa-chevron-right text-gray-300 text-xs"></i>
+                                </div>
+                            ))}
+                        </div>
+                    </>)}
+
+                    {step==='examenes'&&(<>
+                        <div className="relative mb-3">
+                            <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                            <input value={buscarExamen} onChange={e=>setBuscarExamen(e.target.value)} placeholder="Buscar examen..." className="w-full h-10 pl-9 pr-3 border border-gray-200 focus:border-blue-500 focus:outline-none bg-gray-50 rounded-xl text-sm"/>
+                        </div>
+                        {categorias.map(cat=>(
+                            <div key={cat} className="mb-3">
+                                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{cat}</h3>
+                                <div className="space-y-1.5">
+                                    {filteredExams.filter(e=>e.categoria===cat).map(e=>(
+                                        <div key={e.id} onClick={()=>toggleExam(e.id)} className={`flex items-center gap-3 p-2.5 rounded-xl cursor-pointer border-2 transition-all ${selectedIds.has(e.id)?'border-blue-500 bg-blue-50':'border-gray-200 hover:border-gray-300'}`}>
+                                            <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${selectedIds.has(e.id)?'bg-blue-500':'bg-gray-100 border border-gray-300'}`}>{selectedIds.has(e.id)&&<i className="fas fa-check text-white text-xs"></i>}</div>
+                                            <p className="text-gray-800 text-sm flex-1">{e.nombre}</p>
+                                            <span className="text-gray-500 text-xs font-semibold">S/ {e.precio}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </>)}
+
+                    {step==='pdfs'&&createdOrder&&(<div className="space-y-3">
+                        {createdOrder.items.map(item=>(
+                            <div key={item.id} className="border border-gray-200 rounded-xl p-3">
+                                <p className="text-gray-800 font-semibold text-sm mb-2">{item.examName}</p>
+                                {files[item.id]?(
+                                    <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-300 px-3 py-2 rounded-lg"><i className="fas fa-check-circle text-emerald-600 text-sm"></i><span className="text-emerald-800 text-sm flex-1 truncate">{files[item.id].name}</span><button onClick={()=>setFiles(prev=>{const n={...prev};delete n[item.id];return n;})} className="text-gray-500 hover:text-gray-700"><i className="fas fa-times text-xs"></i></button></div>
+                                ):(
+                                    <label className="flex items-center gap-3 bg-white border-2 border-dashed border-gray-300 hover:border-cyan-500 hover:bg-cyan-50 px-3 py-3 rounded-lg cursor-pointer transition-all"><i className="fas fa-upload text-gray-500"></i><span className="text-gray-600 text-sm">Seleccionar PDF del resultado</span><input type="file" accept="application/pdf" className="hidden" onChange={e=>handleFile(item.id,e)} /></label>
+                                )}
+                            </div>
+                        ))}
+                    </div>)}
+
+                    {msg && <p className="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mt-3">{msg}</p>}
+                </div>
+
+                <div className="p-5 border-t border-gray-200 flex-shrink-0">
+                    {step==='examenes'&&(
+                        <div className="flex gap-2">
+                            <button onClick={()=>setStep('paciente')} className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-sm"><i className="fas fa-arrow-left"></i></button>
+                            <button onClick={crearPedido} disabled={creating||selectedIds.size===0} className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2">
+                                {creating ? <><i className="fas fa-spinner fa-spin"></i> Creando...</> : <>Continuar ({selectedIds.size})</>}
+                            </button>
+                        </div>
+                    )}
+                    {step==='pdfs'&&(
+                        <button onClick={enviarTodo} disabled={sending} className="w-full py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2">
+                            {sending ? <><i className="fas fa-spinner fa-spin"></i> Enviando...</> : <><i className="fas fa-paper-plane"></i> Enviar</>}
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
+        </ModalPortal>
+    );
+};
+
 const SeccionPedidos = ({ orders, onStatusChange, onSuccess, onRefresh }) => {
     const [tab, setTab] = useState('pending'); const [search, setSearch] = useState(''); const [showSearch, setShowSearch] = useState(false);
+    const [showManualOrder, setShowManualOrder] = useState(false);
     const pending   = orders.filter(o => o.status !== 'completed');
     // Historial debe mostrar TODO pedido con el examen ya completado (resultado
     // enviado al cliente), tenga o no la factura subida todavía — antes exigía
@@ -1483,6 +1655,10 @@ const SeccionPedidos = ({ orders, onStatusChange, onSuccess, onRefresh }) => {
     // resultado) a los pedidos que ya están en Facturación > Pendientes.
     const completed = orders.filter(o => o.status === 'completed').sort((a,b) => new Date(b.completedAt||b.date)-new Date(a.completedAt||a.date));
     const list = (tab==='pending'?pending:completed).filter(o => !search||o.userName.toLowerCase().includes(search.toLowerCase())||o.items.some(it=>it.exam?.name?.toLowerCase().includes(search.toLowerCase())||it.pet?.name?.toLowerCase().includes(search.toLowerCase())));
+    // NUEVO — lista de mascotas (para el paso "buscar paciente" del pedido manual),
+    // armada igual que en SeccionPacientes: derivada de los pedidos ya cargados.
+    const allPets = []; const seenPets = new Set();
+    orders.forEach(o => { o.items.forEach(it => { const key = it.pet?.id||it.pet?.name; if (!key||seenPets.has(key)) return; seenPets.add(key); allPets.push({...it.pet, ownerClient:o.userName}); }); });
     return (
         <div className="flex flex-col h-full">
             <div className="md:hidden bg-white flex-shrink-0" style={{boxShadow:'0 4px 14px -2px rgba(0,0,0,0.1)'}}>
@@ -1520,9 +1696,10 @@ const SeccionPedidos = ({ orders, onStatusChange, onSuccess, onRefresh }) => {
             </div>
             <div className={`flex-1 overflow-y-auto pt-3 md:pt-4 px-4 pb-4 hide-scrollbar ${(showSearch&&!search)?'hidden':''}`}>
                 {list.length===0?(<div className="flex flex-col items-center justify-center h-64"><i className={`fas ${tab==='pending'?'fa-inbox':'fa-history'} text-5xl mb-3 text-gray-300`}></i><p className="text-gray-600">{tab==='pending'?'Sin pedidos pendientes':'Sin pedidos completados'}</p></div>):(
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 pb-6">{list.map(o=><OrderCard key={o.id} order={o} onStatusChange={onStatusChange} onSuccess={onSuccess} hideBilling/>)}</div>
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 pb-6">{list.map(o=><OrderCard key={o.id} order={o} onStatusChange={onStatusChange} onSuccess={onSuccess} hideBilling onNuevoManual={()=>setShowManualOrder(true)}/>)}</div>
                 )}
             </div>
+            {showManualOrder&&<ManualOrderModal allPets={allPets} onClose={()=>setShowManualOrder(false)} onSuccess={onSuccess}/>}
         </div>
     );
 };
