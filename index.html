@@ -1486,9 +1486,10 @@ const ManualOrderModal = ({ allPets, onClose, onSuccess }) => {
     const [catalog, setCatalog] = useState(CATALOG_DEFAULT);
     const [buscarExamen, setBuscarExamen] = useState('');
     const [selectedIds, setSelectedIds] = useState(new Set());
-    const [creating, setCreating] = useState(false);
-    const [createdOrder, setCreatedOrder] = useState(null); // { id, items:[{id, examName}] }
-    const [files, setFiles] = useState({}); // itemId -> File
+    // NUEVO — el pedido NO se crea en el backend hasta presionar "Enviar" con
+    // los PDFs ya listos. Antes se creaba al pasar de "examenes" a "pdfs", y si
+    // el usuario cancelaba ahí, el pedido quedaba huérfano en la base de datos.
+    const [files, setFiles] = useState({}); // examId del catálogo -> File
     const [sending, setSending] = useState(false);
     const [msg, setMsg] = useState('');
 
@@ -1511,38 +1512,37 @@ const ManualOrderModal = ({ allPets, onClose, onSuccess }) => {
     const filteredExams = catalogoMedico.filter(e => !buscarExamen || norm(e.nombre).includes(norm(buscarExamen)) || norm(e.categoria).includes(norm(buscarExamen)));
     const categorias = [...new Set(filteredExams.map(e => e.categoria))];
 
+    // Examenes elegidos, en un orden estable (el mismo que se manda al crear
+    // el pedido y el mismo en que el backend devuelve los items).
+    const selectedExams = catalog.filter(e => selectedIds.has(e.id));
+
     const toggleExam = (id) => setSelectedIds(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
 
-    const crearPedido = async () => {
-        const items = catalog.filter(e => selectedIds.has(e.id)).map(e => ({ examName: e.nombre, price: e.precio }));
-        if (items.length === 0) { setMsg('Selecciona al menos un examen'); return; }
-        setCreating(true); setMsg('');
-        try {
-            const data = await api.createManualOrder({ petId: selectedPet.id, items });
-            setCreatedOrder(data);
-            setStep('pdfs');
-        } catch (e) { setMsg('❌ Error: ' + e.message); }
-        setCreating(false);
-    };
-
-    const handleFile = (itemId, e) => {
+    const handleFile = (examId, e) => {
         const f = e.target.files[0];
         if (!f || f.type !== 'application/pdf') return;
-        setFiles(prev => ({ ...prev, [itemId]: f }));
+        setFiles(prev => ({ ...prev, [examId]: f }));
     };
 
     const enviarTodo = async () => {
-        if (!createdOrder) return;
-        const faltantes = createdOrder.items.filter(it => !files[it.id]);
-        if (faltantes.length > 0) { setMsg(`Falta subir el PDF de: ${faltantes.map(it => it.examName).join(', ')}`); return; }
+        const faltantes = selectedExams.filter(e => !files[e.id]);
+        if (faltantes.length > 0) { setMsg(`Falta subir el PDF de: ${faltantes.map(e => e.nombre).join(', ')}`); return; }
         setSending(true); setMsg('');
         try {
-            for (const item of createdOrder.items) {
+            // Recien AHORA se crea el pedido en el backend — si algo falla antes
+            // de este punto (o si canceló antes), no quedó nada guardado.
+            const data = await api.createManualOrder({
+                petId: selectedPet.id,
+                items: selectedExams.map(e => ({ examName: e.nombre, price: e.precio }))
+            });
+            for (let i = 0; i < data.items.length; i++) {
+                const itemId = data.items[i].id;
+                const file = files[selectedExams[i].id];
                 const fd = new FormData();
-                fd.append('file', files[item.id]);
-                fd.append('itemId', item.id);
-                await api.uploadResult(createdOrder.id, fd);
-                await api.enviarExamen(createdOrder.id, item.id);
+                fd.append('file', file);
+                fd.append('itemId', itemId);
+                await api.uploadResult(data.id, fd);
+                await api.enviarExamen(data.id, itemId);
             }
             onSuccess('✅ Pedido manual creado y enviado');
             onClose();
@@ -1607,14 +1607,14 @@ const ManualOrderModal = ({ allPets, onClose, onSuccess }) => {
                         ))}
                     </>)}
 
-                    {step==='pdfs'&&createdOrder&&(<div className="space-y-3">
-                        {createdOrder.items.map(item=>(
-                            <div key={item.id} className="border border-gray-200 rounded-xl p-3">
-                                <p className="text-gray-800 font-semibold text-sm mb-2">{item.examName}</p>
-                                {files[item.id]?(
-                                    <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-300 px-3 py-2 rounded-lg"><i className="fas fa-check-circle text-emerald-600 text-sm"></i><span className="text-emerald-800 text-sm flex-1 truncate">{files[item.id].name}</span><button onClick={()=>setFiles(prev=>{const n={...prev};delete n[item.id];return n;})} className="text-gray-500 hover:text-gray-700"><i className="fas fa-times text-xs"></i></button></div>
+                    {step==='pdfs'&&(<div className="space-y-3">
+                        {selectedExams.map(exam=>(
+                            <div key={exam.id} className="border border-gray-200 rounded-xl p-3">
+                                <p className="text-gray-800 font-semibold text-sm mb-2">{exam.nombre}</p>
+                                {files[exam.id]?(
+                                    <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-300 px-3 py-2 rounded-lg"><i className="fas fa-check-circle text-emerald-600 text-sm"></i><span className="text-emerald-800 text-sm flex-1 truncate">{files[exam.id].name}</span><button onClick={()=>setFiles(prev=>{const n={...prev};delete n[exam.id];return n;})} className="text-gray-500 hover:text-gray-700"><i className="fas fa-times text-xs"></i></button></div>
                                 ):(
-                                    <label className="flex items-center gap-3 bg-white border-2 border-dashed border-gray-300 hover:border-cyan-500 hover:bg-cyan-50 px-3 py-3 rounded-lg cursor-pointer transition-all"><i className="fas fa-upload text-gray-500"></i><span className="text-gray-600 text-sm">Seleccionar PDF del resultado</span><input type="file" accept="application/pdf" className="hidden" onChange={e=>handleFile(item.id,e)} /></label>
+                                    <label className="flex items-center gap-3 bg-white border-2 border-dashed border-gray-300 hover:border-cyan-500 hover:bg-cyan-50 px-3 py-3 rounded-lg cursor-pointer transition-all"><i className="fas fa-upload text-gray-500"></i><span className="text-gray-600 text-sm">Seleccionar PDF del resultado</span><input type="file" accept="application/pdf" className="hidden" onChange={e=>handleFile(exam.id,e)} /></label>
                                 )}
                             </div>
                         ))}
@@ -1627,8 +1627,8 @@ const ManualOrderModal = ({ allPets, onClose, onSuccess }) => {
                     {step==='examenes'&&(
                         <div className="flex gap-2">
                             <button onClick={()=>setStep('paciente')} className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-sm"><i className="fas fa-arrow-left"></i></button>
-                            <button onClick={crearPedido} disabled={creating||selectedIds.size===0} className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2">
-                                {creating ? <><i className="fas fa-spinner fa-spin"></i> Creando...</> : <>Continuar ({selectedIds.size})</>}
+                            <button onClick={()=>{setMsg('');setStep('pdfs');}} disabled={selectedIds.size===0} className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2">
+                                Continuar ({selectedIds.size})
                             </button>
                         </div>
                     )}
