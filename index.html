@@ -1514,7 +1514,10 @@ const ManualOrderModal = ({ allPets, onClose, onSuccess }) => {
 
     // Examenes elegidos, en un orden estable (el mismo que se manda al crear
     // el pedido y el mismo en que el backend devuelve los items).
-    const selectedExams = catalog.filter(e => selectedIds.has(e.id));
+    // NUEVO — filtra por tipo 'medico' además del id: el catálogo reutiliza los
+    // mismos ids (P1..P9) para el set de "médico" y el de "dueño" (paquetes tipo
+    // "Chequeo General"), así que filtrar solo por id traía ambos.
+    const selectedExams = catalogoMedico.filter(e => selectedIds.has(e.id));
 
     const toggleExam = (id) => setSelectedIds(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
 
