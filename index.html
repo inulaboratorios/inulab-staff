@@ -712,6 +712,22 @@ const TrackingMap = ({ order, phase }) => {
     );
 };
 
+// NUEVO — Carga pdf.js una sola vez (se comparte entre todos los visores).
+const ensurePdfJsLib = () => {
+    if (window.__inulabPdfJsPromise) return window.__inulabPdfJsPromise;
+    window.__inulabPdfJsPromise = new Promise((resolve, reject) => {
+        if (window.pdfjsLib) { resolve(window.pdfjsLib); return; }
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        script.onload = () => {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            resolve(window.pdfjsLib);
+        };
+        script.onerror = () => reject(new Error('No se pudo cargar pdf.js'));
+        document.head.appendChild(script);
+    });
+    return window.__inulabPdfJsPromise;
+};
 const PdfViewer = ({ title, subtitle, icon, pdfUrl, date, orderId, userId, clientName, examName, petName, onClose }) => {
     const [blobUrl, setBlobUrl] = React.useState(null);
     const [downloadName, setDownloadName] = React.useState(null);
@@ -719,6 +735,12 @@ const PdfViewer = ({ title, subtitle, icon, pdfUrl, date, orderId, userId, clien
     const [error, setError] = React.useState(false);
     const [sending, setSending] = React.useState(false);
     const [sendMsg, setSendMsg] = React.useState('');
+    // NUEVO — pdf.js: cada página se dibuja en su propio <canvas>, en vez de
+    // depender del visor nativo de PDF de cada navegador (el iframe con blob
+    // funcionaba en Chrome pero en Safari no dejaba hacer scroll entre páginas).
+    const [pdfDoc, setPdfDoc] = React.useState(null);
+    const [numPages, setNumPages] = React.useState(0);
+    const pdfContainerRef = React.useRef(null);
 
     React.useEffect(() => {
         if (!pdfUrl) { setLoading(false); setError(true); return; }
@@ -741,6 +763,48 @@ const PdfViewer = ({ title, subtitle, icon, pdfUrl, date, orderId, userId, clien
             .then(blob => { setBlobUrl(window.URL.createObjectURL(blob)); setLoading(false); })
             .catch(() => { setError(true); setLoading(false); });
     }, [pdfUrl]);
+
+    React.useEffect(() => {
+        if (!blobUrl) return;
+        let cancelled = false;
+        setPdfDoc(null); setNumPages(0);
+        ensurePdfJsLib().then(pdfjsLib => pdfjsLib.getDocument(blobUrl).promise).then(doc => {
+            if (cancelled) return;
+            setPdfDoc(doc); setNumPages(doc.numPages);
+        }).catch(() => { if (!cancelled) setError(true); });
+        return () => { cancelled = true; };
+    }, [blobUrl]);
+
+    React.useEffect(() => {
+        if (!pdfDoc || !numPages || !pdfContainerRef.current) return;
+        const container = pdfContainerRef.current;
+        container.innerHTML = '';
+        const dpr = window.devicePixelRatio || 1;
+        let cancelled = false;
+        (async () => {
+            for (let i = 1; i <= numPages; i++) {
+                if (cancelled) return;
+                try {
+                    const page = await pdfDoc.getPage(i);
+                    const containerWidth = container.clientWidth || 600;
+                    const baseViewport = page.getViewport({ scale: 1 });
+                    const scale = containerWidth / baseViewport.width;
+                    const viewport = page.getViewport({ scale: scale * dpr });
+                    const canvas = document.createElement('canvas');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    canvas.style.width = '100%';
+                    canvas.style.height = 'auto';
+                    canvas.style.display = 'block';
+                    if (i < numPages) canvas.style.marginBottom = '10px';
+                    container.appendChild(canvas);
+                    const ctx = canvas.getContext('2d');
+                    await page.render({ canvasContext: ctx, viewport }).promise;
+                } catch (e) {}
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [pdfDoc, numPages]);
 
     const handleDownload = () => {
         if (!blobUrl) return;
@@ -844,11 +908,14 @@ const PdfViewer = ({ title, subtitle, icon, pdfUrl, date, orderId, userId, clien
                             </div>
                         )}
                         {!loading && !error && blobUrl && (
-                            <iframe
-                                src={blobUrl + '#toolbar=0&navpanes=0&scrollbar=0'}
-                                className="w-full border-0"
-                                style={{height:'600px'}}
-                            />
+                            !numPages ? (
+                                <div className="flex flex-col items-center gap-3 py-16">
+                                    <div className="animate-spin rounded-full h-10 w-10 border-4 border-purple-500 border-t-transparent"></div>
+                                    <p className="text-sm text-gray-500">Cargando PDF...</p>
+                                </div>
+                            ) : (
+                                <div ref={pdfContainerRef} className="w-full bg-gray-200" style={{minHeight:'200px', padding:'8px'}}></div>
+                            )
                         )}
                     </div>
                     <div className="flex gap-3 mb-2">
