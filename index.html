@@ -622,8 +622,9 @@ const normalizeOrder = (o) => {
         status, date: o.createdAt || o.date, completedAt: o.completedAt,
         items: (o.items || []).map(it => ({
             id: it.id,
-            exam: { id: it.examId || it.exam?.id, name: it.examName || it.exam?.name || 'Examen' },
+            exam: { id: it.examId || it.exam?.id, name: it.examName || it.exam?.name || 'Examen', subtitle: it.examSubtitle || it.exam?.subtitle || null },
             pet:  { id: it.petId || it.pet?.id, name: it.petName || it.pet?.name || 'Mascota', photo: it.petPhoto || it.pet?.photo || '🐾', owner: it.petOwner || it.pet?.owner || '', lastName: it.petLastName || it.pet?.lastName || '' },
+            price: it.price ?? it.exam?.price ?? null,
             address: { name: it.addressName || it.address?.name || '', address: it.addressStreet || it.address?.street || it.address?.address || 'N/A', district: it.addressDistrict || it.address?.district || 'N/A', reference: it.addressReference || it.address?.reference || '' },
             pdfData: it.hasPdf ? `${API_BASE}/api/Orders/${o.id}/items/${it.id}/result-pdf` : null,
             isSent: it.isSent || false,
@@ -978,7 +979,7 @@ const UploadSingleResultModal = ({ order, item, onClose, onSuccess }) => {
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
             <div className="bg-white rounded-2xl w-full max-w-md border border-gray-200 shadow-2xl">
                 <div className="p-5 border-b border-gray-200 flex items-center justify-between">
-                    <div><h2 className="text-gray-800 font-bold">Subir Resultado</h2><p className="text-gray-600 text-sm">{getPetFullName(item.pet)} · {resolverNombreExamen(item.exam?.name)}</p></div>
+                    <div><h2 className="text-gray-800 font-bold">Subir Resultado</h2><p className="text-gray-600 text-sm">{getPetFullName(item.pet)} · {resolverNombreExamen(item.exam?.name)}{item.exam?.subtitle&&<span className="text-gray-400"> · {item.exam.subtitle}</span>}</p></div>
                     <button onClick={onClose} className="w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600"><i className="fas fa-times"></i></button>
                 </div>
                 <div className="p-5">
@@ -1432,9 +1433,10 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight, hideRecojo, hi
                         <div key={i} className="bg-white rounded-lg p-2 flex items-center gap-2 shadow-sm">
                             <PetPhoto photo={item.pet?.photo} size="md"/>
                             <div className="flex-1 min-w-0">
-                                <p className="text-gray-800 font-medium text-sm truncate">{getPetFullName(item.pet)} · {resolverNombreExamen(item.exam?.name)}</p>
+                                <p className="text-gray-800 font-medium text-sm truncate">{getPetFullName(item.pet)} · {resolverNombreExamen(item.exam?.name)}{item.exam?.subtitle&&<span className="text-gray-400 font-normal"> · {item.exam.subtitle}</span>}</p>
                                 <p className="text-gray-400 text-xs truncate"><i className="fas fa-map-marker-alt mr-1"></i>{item.address?.address&&item.address.address!=='N/A'?`${item.address.address}, `:''}{item.address?.district}</p>
                             </div>
+                            {item.price!=null&&<span className="flex-shrink-0 text-xs bg-gray-100 text-gray-600 rounded-lg px-2 py-1 font-semibold">S/ {item.price}</span>}
                             {item.tomaMuestra&&<span className="flex-shrink-0 text-xs bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg px-2 py-1 font-medium"><i className="fas fa-syringe mr-1"></i>Toma solicitada</span>}
                             {!hideItemActions&&<>
                             {!item.pdfData&&!isLegacyCompleted&&<button onClick={()=>canUploadResults&&setUploadItem(item)} disabled={!canUploadResults} title={canUploadResults?"Subir examen":"Dale clic a \"Procesar\", o activa \"Manual\" para subir de una vez"} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0 ${canUploadResults?'bg-orange-100 hover:bg-orange-200 text-orange-600 cursor-pointer':'bg-gray-100 text-gray-300 cursor-not-allowed'}`}><i className="fas fa-file-upload text-xs"></i></button>}
