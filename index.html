@@ -1613,10 +1613,13 @@ const ManualOrderModal = ({ allPets, onClose, onSuccess }) => {
                 const fd = new FormData();
                 fd.append('file', file);
                 fd.append('itemId', itemId);
+                // NUEVO — solo se sube el PDF, ya NO se envía automáticamente al
+                // cliente. El pedido queda en Pendientes con el PDF cargado, y
+                // el envío se hace aparte con el botón de avión de papel que ya
+                // existe en cada examen (igual que en los pedidos normales).
                 await api.uploadResult(data.id, fd);
-                await api.enviarExamen(data.id, itemId);
             }
-            onSuccess('✅ Pedido manual creado y enviado');
+            onSuccess('✅ Resultados subidos — quedaron pendientes de envío en Pedidos');
             onClose();
         } catch (e) { setMsg('❌ Error: ' + e.message); }
         setSending(false);
@@ -1706,7 +1709,7 @@ const ManualOrderModal = ({ allPets, onClose, onSuccess }) => {
                     )}
                     {step==='pdfs'&&(
                         <button onClick={enviarTodo} disabled={sending} className="w-full py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2">
-                            {sending ? <><i className="fas fa-spinner fa-spin"></i> Enviando...</> : <><i className="fas fa-paper-plane"></i> Enviar</>}
+                            {sending ? <><i className="fas fa-spinner fa-spin"></i> Subiendo...</> : <><i className="fas fa-upload"></i> Guardar</>}
                         </button>
                     )}
                 </div>
