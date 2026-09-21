@@ -1433,7 +1433,8 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight, hideRecojo, hi
                         <div key={i} className="bg-white rounded-lg p-2 flex items-center gap-2 shadow-sm">
                             <PetPhoto photo={item.pet?.photo} size="md"/>
                             <div className="flex-1 min-w-0">
-                                <p className="text-gray-800 font-medium text-sm truncate">{getPetFullName(item.pet)} · {resolverNombreExamen(item.exam?.name)}{item.exam?.subtitle&&<span className="text-gray-400 font-normal"> · {item.exam.subtitle}</span>}</p>
+                                <p className="text-gray-800 font-medium text-sm truncate">{getPetFullName(item.pet)} · {resolverNombreExamen(item.exam?.name)}</p>
+                                {item.exam?.subtitle&&<p className="text-gray-400 text-xs truncate">{item.exam.subtitle}</p>}
                                 <p className="text-gray-400 text-xs truncate"><i className="fas fa-map-marker-alt mr-1"></i>{item.address?.address&&item.address.address!=='N/A'?`${item.address.address}, `:''}{item.address?.district}</p>
                             </div>
                             {item.price!=null&&<span className="flex-shrink-0 text-xs bg-gray-100 text-gray-600 rounded-lg px-2 py-1 font-semibold">S/ {item.price}</span>}
