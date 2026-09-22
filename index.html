@@ -2453,6 +2453,31 @@ const SeccionCatalogo = () => {
                 const map = {}; const descMap = {}; const nombreMap = {};
                 data.forEach(p => { const k = p.examenId + '|' + p.tipoUsuario; map[k] = p.precio; descMap[k] = p.descripcion || ''; if (p.nombre) nombreMap[k] = p.nombre; });
                 setPrecios(map); setDescripciones(descMap); setNombres(nombreMap);
+
+                // NUEVO — antes "catalog" se quedaba siempre en CATALOG_DEFAULT (la
+                // lista fija del código), así que un examen agregado con "Nuevo
+                // Examen" quedaba guardado en la base pero desaparecía de esta
+                // pantalla apenas se recargaba (nunca se agregaba a la lista que
+                // se muestra). Ahora se arma la lista real a partir de lo que
+                // devuelve la API — que sí tiene TODOS los examenes, incluyendo
+                // los nuevos — usando CATALOG_DEFAULT solo como respaldo para
+                // completar categoría/nombre si algún examen viejo no trajera
+                // esos datos desde la API.
+                const porId = {};
+                CATALOG_DEFAULT.forEach(e => { porId[e.id + '|' + e.tipo] = e; });
+                const desdeApi = data.map(p => {
+                    const base = porId[p.examenId + '|' + p.tipoUsuario];
+                    return {
+                        id: p.examenId,
+                        tipo: p.tipoUsuario,
+                        nombre: p.nombre || base?.nombre || p.examenId,
+                        categoria: p.categoria || base?.categoria || 'Sin categoría',
+                        precio: p.precio,
+                    };
+                });
+                const idsDesdeApi = new Set(desdeApi.map(e => e.id + '|' + e.tipo));
+                const faltantesDeDefault = CATALOG_DEFAULT.filter(e => !idsDesdeApi.has(e.id + '|' + e.tipo));
+                setCatalog([...desdeApi, ...faltantesDeDefault]);
             }
         }).catch(() => {});
     }, []);
