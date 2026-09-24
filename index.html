@@ -3151,6 +3151,13 @@ const App = () => {
     const [auth, setAuth]           = useState(false);
     const [user, setUser]           = useState(null);
     const [orders, setOrders]       = useState([]);
+    // NUEVO — vista rápida de "solo pendientes" mientras se termina de cargar
+    // el historial completo. Solo la pestaña de Pedidos la usa (de ahí viene
+    // el beneficio de velocidad); el resto de la app (Inicio, Pacientes,
+    // Resultados, Facturación) sigue esperando a "orders" completo, para que
+    // widgets como "Último resultado"/"Último comprobante" (que buscan entre
+    // pedidos completados, ausentes en la vista rápida) no parpadeen.
+    const [pendingPreview, setPendingPreview] = useState(null);
     const [view, setView]           = useState('inicio');
     const [loading, setLoading]     = useState(true);
     const [loginErr, setLoginErr]   = useState('');
@@ -3290,20 +3297,21 @@ const App = () => {
     }, [auth]);
 
     // NUEVO — carga en 2 pasos: primero solo pendientes (rápido, poquitas
-    // filas) para que la pestaña de Pedidos no se quede en blanco esperando;
-    // después, en segundo plano, trae el historial completo para que
-    // Pacientes/Resultados/Facturación (que sí necesitan todo) también
-    // queden al día sin que nadie tenga que esperar esa consulta pesada.
+    // filas), guardado aparte en "pendingPreview" para que solo la pestaña de
+    // Pedidos lo use de entrada; "orders" (el que ve el resto de la app) se
+    // actualiza una sola vez, cuando llega el historial completo — igual que
+    // antes, sin parpadeos en Inicio/Pacientes/Resultados/Facturación.
     const loadOrders = async () => {
         try {
             const dataPending = await api.getOrdersPending();
             const rawPending = Array.isArray(dataPending) ? dataPending : (dataPending.orders || []);
-            setOrders(rawPending.map(normalizeOrder));
+            setPendingPreview(rawPending.map(normalizeOrder));
         } catch (e) { console.error('Error cargando pedidos pendientes:', e.message); }
         try {
             const data = await api.getOrders();
             const raw = Array.isArray(data) ? data : (data.orders || []);
             setOrders(raw.map(normalizeOrder));
+            setPendingPreview(null);
         } catch (e) { console.error('Error cargando pedidos:', e.message); }
     };
 
@@ -3413,7 +3421,7 @@ const App = () => {
                 <div className="flex-1 flex flex-col min-w-0 min-h-0">
                     <div className="flex-1 min-h-0 overflow-hidden" style={{position:'relative'}}>
                         {view==='inicio'       && <SeccionInicio     orders={orders} user={user} onGoTo={(s)=>setView(s)} />}
-                        {view==='pedidos'       && <SeccionPedidos    orders={orders} onStatusChange={handleStatusChange} onSuccess={m=>{setSuccess(m);setTimeout(()=>setSuccess(''),4000);loadOrders();}} onRefresh={loadOrders}/>}
+                        {view==='pedidos'       && <SeccionPedidos    orders={orders.length?orders:(pendingPreview||[])} onStatusChange={handleStatusChange} onSuccess={m=>{setSuccess(m);setTimeout(()=>setSuccess(''),4000);loadOrders();}} onRefresh={loadOrders}/>}
                         {view==='pacientes'     && <SeccionPacientes  orders={orders}/>}
                         {view==='resultados'    && <SeccionResultados orders={orders}/>}
                         {view==='facturacion'   && <SeccionFacturacion orders={orders} onStatusChange={handleStatusChange} onSuccess={m=>{setSuccess(m);setTimeout(()=>setSuccess(''),4000);loadOrders();}} onRefresh={loadOrders}/>}
