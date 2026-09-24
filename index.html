@@ -412,6 +412,7 @@ const api = {
     login:            (u, p)    => api.call('POST', '/api/Auth/login', { username: u, password: p }),
     me:               ()        => api.call('GET',  '/api/Auth/me'),
     getOrders:        ()        => api.call('GET',  '/api/Orders?pageSize=10000'),
+    getOrdersPending: ()        => api.call('GET',  '/api/Orders?pageSize=10000&pendingOnly=true'),
     createManualOrder:(data)    => api.call('POST', '/api/Orders/manual', data),
     updateStatus:     (id, s)   => api.call('PUT',  `/api/Orders/${id}/status`, { status: s }),
     assignMotorizado: (id, mId) => api.call('PUT',  `/api/Orders/${id}/assign-motorizado`, { motorizadoId: mId }),
@@ -3288,7 +3289,23 @@ const App = () => {
         return () => { worker.terminate(); URL.revokeObjectURL(blobUrl); pollWorkerRef.current = null; };
     }, [auth]);
 
-    const loadOrders = async () => { try { const data = await api.getOrders(); const raw = Array.isArray(data) ? data : (data.orders || []); setOrders(raw.map(normalizeOrder)); } catch (e) { console.error('Error cargando pedidos:', e.message); } };
+    // NUEVO — carga en 2 pasos: primero solo pendientes (rápido, poquitas
+    // filas) para que la pestaña de Pedidos no se quede en blanco esperando;
+    // después, en segundo plano, trae el historial completo para que
+    // Pacientes/Resultados/Facturación (que sí necesitan todo) también
+    // queden al día sin que nadie tenga que esperar esa consulta pesada.
+    const loadOrders = async () => {
+        try {
+            const dataPending = await api.getOrdersPending();
+            const rawPending = Array.isArray(dataPending) ? dataPending : (dataPending.orders || []);
+            setOrders(rawPending.map(normalizeOrder));
+        } catch (e) { console.error('Error cargando pedidos pendientes:', e.message); }
+        try {
+            const data = await api.getOrders();
+            const raw = Array.isArray(data) ? data : (data.orders || []);
+            setOrders(raw.map(normalizeOrder));
+        } catch (e) { console.error('Error cargando pedidos:', e.message); }
+    };
 
     const handleLogin = async (e) => {
         e.preventDefault(); setLoginErr('');
