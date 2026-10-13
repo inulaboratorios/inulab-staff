@@ -455,6 +455,11 @@ const api = {
     createPetAdmin:   (data)     => api.call('POST', '/api/Pets/admin', data),
 };
 
+// NUEVO — en celulares/tablets (pantalla táctil) NO se enfoca solo el primer campo
+// al abrir un modal: en iPhone eso abre el teclado de golpe y Safari desplaza la
+// pantalla, dejando el título y el buscador fuera de la vista. En computadora sí
+// se enfoca, para poder escribir directo.
+const autoFoco = !(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
 // NUEVO — emoji según especie, igual que el backend en los pedidos
 const speciesEmoji = (s) => { const e = (s||'').toLowerCase(); return e==='perro'?'🐶':e==='gato'?'🐱':e==='ave'?'🦜':e==='conejo'?'🐰':'🐾'; };
 // NUEVO — convierte una mascota de /api/Pets/admin/todas al mismo formato que usan las secciones de staff
@@ -1639,7 +1644,7 @@ const CrearPacienteModal = ({ onClose, onCreated, onEnviarExamen }) => {
                     ) : !cuenta ? (<>
                         <div className="relative mb-3">
                             <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                            <input autoFocus value={buscarCuenta} onChange={e=>setBuscarCuenta(e.target.value)} placeholder="Buscar veterinario, clínica o dueño..." className="w-full h-10 pl-9 pr-3 border border-gray-200 focus:border-emerald-500 focus:outline-none bg-gray-50 rounded-xl text-sm"/>
+                            <input autoFocus={autoFoco} value={buscarCuenta} onChange={e=>setBuscarCuenta(e.target.value)} placeholder="Buscar veterinario, clínica o dueño..." className="w-full h-10 pl-9 pr-3 border border-gray-200 focus:border-emerald-500 focus:outline-none bg-gray-50 rounded-xl text-sm"/>
                         </div>
                         {cargando ? (<p className="text-gray-400 text-sm text-center py-6">Cargando cuentas...</p>) :
                          filtradas.length===0 ? (<p className="text-gray-400 text-sm text-center py-6">Sin resultados. Si el cliente no tiene cuenta, debe crearla desde la app de clientes.</p>) : (
@@ -1660,7 +1665,7 @@ const CrearPacienteModal = ({ onClose, onCreated, onEnviarExamen }) => {
                         <button onClick={()=>setCuenta(null)} className="text-xs text-emerald-700 font-semibold mb-4 flex items-center gap-1"><i className="fas fa-arrow-left"></i>Cambiar cuenta</button>
                         <div className="space-y-3">
                             <div className="grid grid-cols-2 gap-3">
-                                <div><label className="text-xs text-gray-500 font-semibold">Nombre *</label><input autoFocus value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Ej. Firulais" className={inputCls}/></div>
+                                <div><label className="text-xs text-gray-500 font-semibold">Nombre *</label><input autoFocus={autoFoco} value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Ej. Firulais" className={inputCls}/></div>
                                 <div><label className="text-xs text-gray-500 font-semibold">Apellido / dueño</label><input value={form.lastName} onChange={e=>set('lastName',e.target.value)} placeholder="Ej. Pérez" className={inputCls}/></div>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
@@ -1802,7 +1807,7 @@ const ManualOrderModal = ({ allPets, onClose, onSuccess, initialPet }) => {
                     {step==='paciente'&&(<>
                         <div className="relative mb-3">
                             <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                            <input autoFocus value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar mascota o dueño..." className="w-full h-10 pl-9 pr-3 border border-gray-200 focus:border-blue-500 focus:outline-none bg-gray-50 rounded-xl text-sm"/>
+                            <input autoFocus={autoFoco} value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar mascota o dueño..." className="w-full h-10 pl-9 pr-3 border border-gray-200 focus:border-blue-500 focus:outline-none bg-gray-50 rounded-xl text-sm"/>
                         </div>
                         <div className="space-y-2">
                             {filteredPets.length===0?(<p className="text-gray-400 text-sm text-center py-6">Sin resultados</p>):filteredPets.slice(0,30).map(p=>(
