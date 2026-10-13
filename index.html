@@ -366,6 +366,16 @@
                 overflow: hidden;
             }
         }
+        /* NUEVO — iPhone hace zoom automático al tocar un campo de texto con letra
+           menor a 16px (por ejemplo, al abrir "Crear paciente" o el pedido manual,
+           que enfocan el buscador solos). Con 16px en celulares iOS ya no hace
+           zoom. Solo aplica en iPhone/iPad y en pantallas chicas: en computadora
+           todo se ve igual que antes. */
+        @supports (-webkit-touch-callout: none) {
+            @media (max-width: 767px) {
+                input, select, textarea { font-size: 16px !important; }
+            }
+        }
     </style>
     <meta name="vercel-toolbar" content="false">
     <meta name="vercel-deployment-url" content="">
