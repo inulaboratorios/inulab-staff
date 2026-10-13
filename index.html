@@ -1453,7 +1453,12 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight, hideRecojo, hi
                 </div>
             </div>
             <div className="relative mb-3">
-                <div className={`bg-gray-100 rounded-xl p-2 space-y-2 ${order.items.length > 3 ? 'always-scrollbar' : ''}`} style={{maxHeight:'calc(3 * 56px + 16px)',overflowY: order.items.length > 3 ? 'auto' : 'visible'}}>
+                {/* FIX — antes, con 3 exámenes o menos el contenedor no hacía scroll (overflow visible) y su
+                    alto máximo estaba calculado para tarjetas de 56px. Las tarjetas con subtítulo
+                    (ej. "Hemograma IDEXX + Reticulocitos + CHEM 10") son más altas, así que con 3 exámenes
+                    se salían del recuadro y tapaban "Para Recojo" y la factura. Ahora siempre hace scroll
+                    si no entra, y el alto alcanza para 3 tarjetas con subtítulo. */}
+                <div className="bg-gray-100 rounded-xl p-2 space-y-2 always-scrollbar" style={{maxHeight:'calc(3 * 72px + 16px)',overflowY:'auto'}}>
                     {order.items.map((item,i) => (
                         <div key={i} className="bg-white rounded-lg p-2 flex items-center gap-2 shadow-sm">
                             <PetPhoto photo={item.pet?.photo} size="md"/>
