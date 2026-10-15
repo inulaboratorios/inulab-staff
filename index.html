@@ -3615,7 +3615,10 @@ const App = () => {
                                             <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0">{(user?.username||'A')[0].toUpperCase()}</div>
                                             <div><p className="font-semibold text-gray-800">{user?.username||'Admin'}</p><p className="text-sm text-gray-500">INULABORATORIOS</p></div>
                                         </div>
-                                        <button onClick={handleLogout} className="w-full mt-4 flex items-center justify-center gap-2 text-sm text-red-600 hover:text-white hover:bg-red-600 border border-red-200 px-4 py-3 rounded-xl transition-colors font-medium">
+                                        {/* CAMBIO — en computadora ya está "Cerrar sesión" abajo en la barra lateral, así que aquí se
+                                            oculta (md:hidden). En celular la barra lateral no existe y este es el único botón
+                                            para cerrar sesión, por eso se mantiene. */}
+                                        <button onClick={handleLogout} className="md:hidden w-full mt-4 flex items-center justify-center gap-2 text-sm text-red-600 hover:text-white hover:bg-red-600 border border-red-200 px-4 py-3 rounded-xl transition-colors font-medium">
                                             <i className="fas fa-sign-out-alt"></i>Cerrar sesión
                                         </button>
                                     </div>
