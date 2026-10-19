@@ -2142,31 +2142,37 @@ const SeccionPacientes = ({ orders, onSuccess }) => {
                             <i className="fas fa-arrow-left text-sm"></i>
                         </button>
                         <PetPhoto photo={selPet.photo} size="xl"/>
-                        <div>
+                        <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                                <p className="text-gray-800 font-bold text-lg">{selPet.name}{selPet.lastName?` ${selPet.lastName}`:''}</p>
-                                <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold">{filteredExams.length} exámenes</span>
-                                {selPet.id&&<button onClick={()=>setEditPet({...selPet, ...(petDetails[selPet.id]||{}), id: selPet.id, name:(petDetails[selPet.id]?.name||selPet.name), lastName:(petDetails[selPet.id]?.lastName??selPet.lastName), species:(petDetails[selPet.id]?.species||selPet.species), breed:(petDetails[selPet.id]?.breed||selPet.breed), age:(petDetails[selPet.id]?.age??selPet.age), ageUnit:(petDetails[selPet.id]?.ageUnit||selPet.ageUnit), sex:(petDetails[selPet.id]?.sex||selPet.sex)})} className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1"><i className="fas fa-pen text-[10px]"></i>Editar</button>}
+                                <p className="text-gray-800 font-bold text-lg truncate">{selPet.name}{selPet.lastName?` ${selPet.lastName}`:''}</p>
+                                {/* CAMBIO — el conteo de exámenes solo en computadora; en celular estorbaba */}
+                                <span className="hidden md:inline-block text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold flex-shrink-0">{filteredExams.length} exámenes</span>
                             </div>
                             <p className="text-gray-500 text-sm">Cliente: {selPet.owner||selPet.ownerClient}</p>
                             {(()=>{const d=petDetails[selPet.id]||selPet; const breed=d.breed||d.Breed; const age=d.age??d.Age; const ageUnit=d.ageUnit||d.AgeUnit; const sex=(d.sex||d.Sex||'').toLowerCase(); const si=sex==='macho'||sex==='male'?'fa-mars':sex==='hembra'||sex==='female'?'fa-venus':null; const sc=sex==='macho'||sex==='male'?'text-blue-500':'text-pink-500'; return(<div className="flex items-center gap-3 mt-1 flex-wrap">{breed&&<span className="text-xs text-gray-500 flex items-center gap-1"><i className="fas fa-paw text-cyan-500 text-xs"></i>{breed}</span>}{(age!==null&&age!==undefined&&age!=='')&&<span className="text-xs text-gray-500 flex items-center gap-1"><i className="fas fa-birthday-cake text-cyan-500 text-xs"></i>{formatEdad(age, ageUnit)}</span>}{si&&<span className="text-xs flex items-center gap-1"><i className={`fas ${si} ${sc} text-xs`}></i><span className="text-gray-500">{sex==='macho'||sex==='male'?'Macho':'Hembra'}</span></span>}</div>);})()}
                         </div>
+                        {/* CAMBIO — "Editar" a la derecha de la cabecera, para que no se monte sobre el nombre */}
+                        {selPet.id&&<button onClick={()=>setEditPet({...selPet, ...(petDetails[selPet.id]||{}), id: selPet.id, name:(petDetails[selPet.id]?.name||selPet.name), lastName:(petDetails[selPet.id]?.lastName??selPet.lastName), species:(petDetails[selPet.id]?.species||selPet.species), breed:(petDetails[selPet.id]?.breed||selPet.breed), age:(petDetails[selPet.id]?.age??selPet.age), ageUnit:(petDetails[selPet.id]?.ageUnit||selPet.ageUnit), sex:(petDetails[selPet.id]?.sex||selPet.sex)})} className="flex-shrink-0 self-start text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1.5 rounded-lg font-semibold flex items-center gap-1"><i className="fas fa-pen text-[10px]"></i>Editar</button>}
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <div className="relative flex-1 min-w-36">
+                    {/* CAMBIO — en celular: buscador arriba a todo el ancho y debajo Día / Mes / Año en una fila
+                        (como en la app de clientes), sin el texto "Filtrar por:". En computadora queda igual. */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-2">
+                        <div className="relative md:flex-1 md:min-w-36">
                             <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
                             <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar examen..." className="w-full pl-8 pr-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-700 focus:border-cyan-400 focus:outline-none"/>
                         </div>
-                        <span className="text-xs text-gray-400">Filtrar por:</span>
-                        <select value={filterDay} onChange={e=>setFilterDay(e.target.value)} className="px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-700 text-sm focus:outline-none">
-                            <option value="">Día</option>{dias.map(d=><option key={d} value={d}>{d}</option>)}
-                        </select>
-                        <select value={filterMonth} onChange={e=>setFilterMonth(e.target.value)} className="px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-700 text-sm focus:outline-none">
-                            <option value="">Mes</option>{meses.map((m,i)=><option key={i} value={String(i+1).padStart(2,'0')}>{m}</option>)}
-                        </select>
-                        <select value={filterYear} onChange={e=>setFilterYear(e.target.value)} className="px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-700 text-sm focus:outline-none">
-                            <option value="">Año</option>{years.map(y=><option key={y} value={String(y)}>{y}</option>)}
-                        </select>
+                        <span className="hidden md:inline text-xs text-gray-400">Filtrar por:</span>
+                        <div className="grid grid-cols-3 gap-2 md:flex md:gap-2">
+                            <select value={filterDay} onChange={e=>setFilterDay(e.target.value)} className="w-full md:w-auto px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-700 text-sm focus:outline-none">
+                                <option value="">Día</option>{dias.map(d=><option key={d} value={d}>{d}</option>)}
+                            </select>
+                            <select value={filterMonth} onChange={e=>setFilterMonth(e.target.value)} className="w-full md:w-auto px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-700 text-sm focus:outline-none">
+                                <option value="">Mes</option>{meses.map((m,i)=><option key={i} value={String(i+1).padStart(2,'0')}>{m}</option>)}
+                            </select>
+                            <select value={filterYear} onChange={e=>setFilterYear(e.target.value)} className="w-full md:w-auto px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-700 text-sm focus:outline-none">
+                                <option value="">Año</option>{years.map(y=><option key={y} value={String(y)}>{y}</option>)}
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div className="flex-1 overflow-y-auto pt-3 md:pt-4 px-4 pb-4 hide-scrollbar">
