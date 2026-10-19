@@ -2146,8 +2146,9 @@ const SeccionPacientes = ({ orders, onSuccess }) => {
                         <span className="hidden md:block"><PetPhoto photo={selPet.photo} size="xl"/></span>
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 md:gap-2">
-                                <span className="md:hidden"><PetPhoto photo={selPet.photo} size="sm"/></span>
                                 <p className="text-gray-800 font-bold text-lg truncate">{selPet.name}{selPet.lastName?` ${selPet.lastName}`:''}</p>
+                                {/* CAMBIO — ícono chico a la DERECHA del nombre, así el texto queda alineado a la izquierda */}
+                                <span className="md:hidden flex-shrink-0"><PetPhoto photo={selPet.photo} size="sm"/></span>
                                 {/* CAMBIO — el conteo de exámenes solo en computadora; en celular estorbaba */}
                                 <span className="hidden md:inline-block text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold flex-shrink-0">{filteredExams.length} exámenes</span>
                             </div>
