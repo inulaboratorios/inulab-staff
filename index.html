@@ -2732,7 +2732,7 @@ const SeccionFacturacion = ({ orders, onRefresh, onStatusChange, onSuccess }) =>
 };
 
 // ============================================
-// NUEVO — "Ver más" para dueños (DetalleJson en ExamenesPrecio)
+// NUEVO — "Ver más" de exámenes, para médicos y dueños (DetalleJson en ExamenesPrecio)
 // En staff se escribe como texto simple:
 //   Incluye:        un ítem por línea
 //   ¿Qué evalúa?:   "Título: descripción", uno por línea
@@ -2895,9 +2895,9 @@ const SeccionCatalogo = () => {
             if (!(p > 0)) { setMsg('Completa el precio del examen'); return; }
         }
 
-        // NUEVO — "Ver más" (solo aplica al registro de dueño)
-        const detalleDueno = form.tipo !== 'medico' ? textoADetalle(form.incluye, form.evalua) : '';
-        if (form.tipo !== 'medico' && (contarLineas(form.incluye) > VERMAS_MAX_ITEMS || contarLineas(form.evalua) > VERMAS_MAX_ITEMS)) {
+        // NUEVO — "Ver más" (se guarda en todos los registros que se creen: médico, dueño o ambos)
+        const detalleNuevo = textoADetalle(form.incluye, form.evalua);
+        if (contarLineas(form.incluye) > VERMAS_MAX_ITEMS || contarLineas(form.evalua) > VERMAS_MAX_ITEMS) {
             setMsg(`El "Ver más" admite máximo ${VERMAS_MAX_ITEMS} ítems por lista`); return;
         }
 
@@ -2923,7 +2923,7 @@ const SeccionCatalogo = () => {
             especie: 'ambos',
             requiereTomaMuestra: true,
             tiempoEntrega: '',
-            ...(ex.tipo !== 'medico' && detalleDueno ? { detalleJson: detalleDueno } : {}),
+            ...(detalleNuevo ? { detalleJson: detalleNuevo } : {}),
         }));
         // NUEVO — antes el error se ignoraba y el examen aparecía como agregado
         // aunque el servidor lo hubiera rechazado
@@ -2935,9 +2935,9 @@ const SeccionCatalogo = () => {
             return;
         }
         setCatalog(prev => [...prev, ...nuevos]);
-        if (detalleDueno) {
+        if (detalleNuevo) {
             const det = {};
-            nuevos.filter(ex => ex.tipo !== 'medico').forEach(ex => { det[ex.id + '|' + ex.tipo] = detalleDueno; });
+            nuevos.forEach(ex => { det[ex.id + '|' + ex.tipo] = detalleNuevo; });
             setDetalles(d => ({ ...d, ...det }));
         }
 
@@ -2946,7 +2946,7 @@ const SeccionCatalogo = () => {
         setTimeout(() => setMsg(''), 3000);
     };
 
-    // NUEVO — abre el editor del "Ver más" de un examen de dueño
+    // NUEVO — abre el editor del "Ver más" de un examen (médico o dueño)
     const abrirVerMas = (ex) => {
         const key = ex.id + '|' + ex.tipo;
         setVerMasEdit({ ex, key, ...detalleATexto(detalles[key]) });
@@ -3138,7 +3138,7 @@ const SeccionCatalogo = () => {
                                                 <span className="text-gray-800 text-sm font-medium">{nombreMostrar}</span>
                                                 <span className="text-gray-500 text-xs ml-2">{ex.id}</span>{ex.categoria==='Servicios'&&DESCRIPCIONES_SERVICIOS[ex.id]&&<span className="text-gray-400 text-xs ml-2">· {DESCRIPCIONES_SERVICIOS[ex.id]}</span>}
                                                 {descVal && <span className="text-gray-400 text-xs ml-2">· {descVal}</span>}
-                                                {ex.tipo !== 'medico' && detalles[key] && <span className="ml-2 inline-flex items-center gap-1 bg-cyan-50 text-cyan-700 text-[10px] font-semibold px-1.5 py-0.5 rounded-full align-middle"><i className="fas fa-info-circle"></i>Ver más</span>}
+                                                {detalles[key] && <span className="ml-2 inline-flex items-center gap-1 bg-cyan-50 text-cyan-700 text-[10px] font-semibold px-1.5 py-0.5 rounded-full align-middle"><i className="fas fa-info-circle"></i>Ver más</span>}
                                             </div>
                                             {modoEdicion ? (
                                                 <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -3162,7 +3162,7 @@ const SeccionCatalogo = () => {
                                                     <i className="fas fa-pencil-alt text-xs"></i>
                                                 </button>
                                             )}
-                                            {modoEdicion && ex.tipo !== 'medico' && (
+                                            {modoEdicion && (
                                                 <button onClick={() => abrirVerMas(ex)}
                                                     title='Editar "Ver más"'
                                                     className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all flex-shrink-0 ${detalles[key]?'bg-cyan-100 text-cyan-700':'bg-cyan-50 hover:bg-cyan-100 text-cyan-500'}`}>
@@ -3211,7 +3211,7 @@ const SeccionCatalogo = () => {
                             ) : (
                                 <div><label className="text-gray-700 text-xs font-medium block mb-1">Precio *</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">S/</span><input type="number" min="0" step="0.01" value={form.precio} onChange={e=>setForm(f=>({...f,precio:e.target.value}))} placeholder="0.00" className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-800 text-sm focus:border-indigo-500 focus:outline-none"/></div></div>
                             )}
-                            {form.tipo !== 'medico' && (
+                            {(
                                 <div className="border border-cyan-200 rounded-xl overflow-hidden">
                                     <button type="button" onClick={() => setForm(f => ({ ...f, verMasOpen: !f.verMasOpen }))}
                                         className="w-full px-4 py-2.5 bg-cyan-50 flex items-center gap-2 text-left">
@@ -3222,7 +3222,7 @@ const SeccionCatalogo = () => {
                                     </button>
                                     {form.verMasOpen && (
                                         <div className="p-4 bg-white">
-                                            <p className="text-gray-500 text-xs mb-3">Lo que ve el dueño al tocar "Ver más" en este examen.</p>
+                                            <p className="text-gray-500 text-xs mb-3">{form.tipo === 'ambos' ? 'Lo que ven el médico y el dueño al tocar "Ver más". Se guarda igual en los dos.' : form.tipo === 'medico' ? 'Lo que ve el médico/clínica al tocar "Ver más" en este examen.' : 'Lo que ve el dueño al tocar "Ver más" en este examen.'}</p>
                                             <CamposVerMas incluye={form.incluye} evalua={form.evalua}
                                                 onIncluye={v => setForm(f => ({ ...f, incluye: v }))}
                                                 onEvalua={v => setForm(f => ({ ...f, evalua: v }))}/>
