@@ -2731,6 +2731,67 @@ const SeccionFacturacion = ({ orders, onRefresh, onStatusChange, onSuccess }) =>
     );
 };
 
+// ============================================
+// NUEVO — "Ver más" para dueños (DetalleJson en ExamenesPrecio)
+// En staff se escribe como texto simple:
+//   Incluye:        un ítem por línea
+//   ¿Qué evalúa?:   "Título: descripción", uno por línea
+// y se guarda como { incluye: [...], evalua: [{ titulo, desc }] }
+// ============================================
+const VERMAS_MAX_ITEMS = 30;
+
+const textoADetalle = (incluyeTxt, evaluaTxt) => {
+    const lineas = t => (t || '').split('\n').map(l => l.trim()).filter(Boolean);
+    const incluye = lineas(incluyeTxt);
+    const evalua = lineas(evaluaTxt).map(l => {
+        const i = l.indexOf(':');
+        return i === -1
+            ? { titulo: l, desc: '' }
+            : { titulo: l.slice(0, i).trim(), desc: l.slice(i + 1).trim() };
+    }).filter(x => x.titulo);
+    if (!incluye.length && !evalua.length) return '';
+    return JSON.stringify({ incluye, evalua });
+};
+
+const detalleATexto = (json) => {
+    try {
+        const d = json ? JSON.parse(json) : null;
+        return {
+            incluye: (d?.incluye || []).join('\n'),
+            evalua: (d?.evalua || []).map(x => x.desc ? `${x.titulo}: ${x.desc}` : x.titulo).join('\n'),
+        };
+    } catch { return { incluye: '', evalua: '' }; }
+};
+
+const contarLineas = t => (t || '').split('\n').filter(l => l.trim()).length;
+
+// Campos del "Ver más" (se usan en Nuevo examen y en Editar Ver más)
+const CamposVerMas = ({ incluye, evalua, onIncluye, onEvalua }) => {
+    const nInc = contarLineas(incluye), nEva = contarLineas(evalua);
+    return (
+        <div className="space-y-3">
+            <div>
+                <label className="text-gray-700 text-xs font-medium block mb-1">Incluye <span className="text-gray-400 font-normal">(uno por línea)</span></label>
+                <textarea value={incluye} onChange={e => onIncluye(e.target.value)} rows={3}
+                    placeholder={"Hemograma completo IDEXX\nBioquímica CHEM 10"}
+                    className={`w-full px-3 py-2 rounded-xl bg-gray-50 border text-gray-800 text-sm focus:outline-none resize-y ${nInc > VERMAS_MAX_ITEMS ? 'border-red-400' : 'border-gray-200 focus:border-indigo-500'}`}/>
+            </div>
+            <div>
+                <label className="text-gray-700 text-xs font-medium block mb-1">¿Qué evalúa? <span className="text-gray-400 font-normal">(Título: descripción, uno por línea)</span></label>
+                <textarea value={evalua} onChange={e => onEvalua(e.target.value)} rows={4}
+                    placeholder={"Función renal: BUN y Creatinina miden cómo funcionan los riñones\nGlucosa: Detecta diabetes o problemas metabólicos"}
+                    className={`w-full px-3 py-2 rounded-xl bg-gray-50 border text-gray-800 text-sm focus:outline-none resize-y ${nEva > VERMAS_MAX_ITEMS ? 'border-red-400' : 'border-gray-200 focus:border-indigo-500'}`}/>
+            </div>
+            <p className="text-gray-500 text-xs">
+                {nInc || nEva
+                    ? `El cliente verá ${nInc} ítem${nInc === 1 ? '' : 's'} en "Incluye" y ${nEva} en "¿Qué evalúa?".`
+                    : 'Si lo dejas vacío, el examen no muestra "Ver más".'}
+                {(nInc > VERMAS_MAX_ITEMS || nEva > VERMAS_MAX_ITEMS) && <span className="text-red-600 font-medium"> Máximo {VERMAS_MAX_ITEMS} por lista.</span>}
+            </p>
+        </div>
+    );
+};
+
 const SeccionCatalogo = () => {
     const [catalog, setCatalog]     = useState(CATALOG_DEFAULT);
     const [precios, setPrecios]     = useState({});
@@ -2744,7 +2805,11 @@ const SeccionCatalogo = () => {
     const [showControlsCatalogo, setShowControlsCatalogo] = useState(false);
     const [modoEdicion, setModoEdicion] = useState(false); // ← NUEVO: modo edición
     const [showForm, setShowForm]   = useState(false);
-    const [form, setForm]           = useState({ nombre:'', categoria:'', tipo:'medico', precio:'', precioVet:'', precioDueno:'', descripcion:'' });
+    const FORM_VACIO = { nombre:'', categoria:'', tipo:'medico', precio:'', precioVet:'', precioDueno:'', descripcion:'', verMasOpen:false, incluye:'', evalua:'' };
+    const [form, setForm]           = useState(FORM_VACIO);
+    const [detalles, setDetalles]   = useState({}); // ← NUEVO: DetalleJson ("Ver más") por examen, desde la BD
+    const [verMasEdit, setVerMasEdit] = useState(null); // ← NUEVO: { ex, key, incluye, evalua } del modal "Ver más"
+    const [guardandoVerMas, setGuardandoVerMas] = useState(false);
     const [saving, setSaving]       = useState(false);
     const [guardando, setGuardando] = useState(false);
     const [msg, setMsg]             = useState('');
@@ -2753,9 +2818,9 @@ const SeccionCatalogo = () => {
     useEffect(() => {
         api.getPrecios().then(data => {
             if (Array.isArray(data)) {
-                const map = {}; const descMap = {}; const nombreMap = {};
-                data.forEach(p => { const k = p.examenId + '|' + p.tipoUsuario; map[k] = p.precio; descMap[k] = p.descripcion || ''; if (p.nombre) nombreMap[k] = p.nombre; });
-                setPrecios(map); setDescripciones(descMap); setNombres(nombreMap);
+                const map = {}; const descMap = {}; const nombreMap = {}; const detMap = {};
+                data.forEach(p => { const k = p.examenId + '|' + p.tipoUsuario; map[k] = p.precio; descMap[k] = p.descripcion || ''; if (p.nombre) nombreMap[k] = p.nombre; if (p.detalleJson) detMap[k] = p.detalleJson; });
+                setPrecios(map); setDescripciones(descMap); setNombres(nombreMap); setDetalles(detMap);
 
                 // NUEVO — antes "catalog" se quedaba siempre en CATALOG_DEFAULT (la
                 // lista fija del código), así que un examen agregado con "Nuevo
@@ -2830,6 +2895,12 @@ const SeccionCatalogo = () => {
             if (!(p > 0)) { setMsg('Completa el precio del examen'); return; }
         }
 
+        // NUEVO — "Ver más" (solo aplica al registro de dueño)
+        const detalleDueno = form.tipo !== 'medico' ? textoADetalle(form.incluye, form.evalua) : '';
+        if (form.tipo !== 'medico' && (contarLineas(form.incluye) > VERMAS_MAX_ITEMS || contarLineas(form.evalua) > VERMAS_MAX_ITEMS)) {
+            setMsg(`El "Ver más" admite máximo ${VERMAS_MAX_ITEMS} ítems por lista`); return;
+        }
+
         setSaving(true);
         // En "Ambos" se crea un registro por cada tipo (médico y dueño) con su precio propio
         const descripcion = form.descripcion.trim();
@@ -2852,13 +2923,60 @@ const SeccionCatalogo = () => {
             especie: 'ambos',
             requiereTomaMuestra: true,
             tiempoEntrega: '',
+            ...(ex.tipo !== 'medico' && detalleDueno ? { detalleJson: detalleDueno } : {}),
         }));
-        try { await api.savePrecios(dtos); } catch {}
+        // NUEVO — antes el error se ignoraba y el examen aparecía como agregado
+        // aunque el servidor lo hubiera rechazado
+        try { await api.savePrecios(dtos); }
+        catch (e) {
+            setMsg('❌ Error al agregar: ' + (e.message || 'No se pudo guardar'));
+            setSaving(false);
+            setTimeout(() => setMsg(''), 4000);
+            return;
+        }
         setCatalog(prev => [...prev, ...nuevos]);
+        if (detalleDueno) {
+            const det = {};
+            nuevos.filter(ex => ex.tipo !== 'medico').forEach(ex => { det[ex.id + '|' + ex.tipo] = detalleDueno; });
+            setDetalles(d => ({ ...d, ...det }));
+        }
 
-        setShowForm(false); setForm({ nombre:'', categoria:'', tipo:'medico', precio:'', precioVet:'', precioDueno:'', descripcion:'' });
+        setShowForm(false); setForm(FORM_VACIO);
         setMsg('✅ Examen agregado'); setSaving(false);
         setTimeout(() => setMsg(''), 3000);
+    };
+
+    // NUEVO — abre el editor del "Ver más" de un examen de dueño
+    const abrirVerMas = (ex) => {
+        const key = ex.id + '|' + ex.tipo;
+        setVerMasEdit({ ex, key, ...detalleATexto(detalles[key]) });
+    };
+
+    // NUEVO — guarda solo el "Ver más" de ese examen, al toque.
+    // Manda precio, nombre y subtítulo YA GUARDADOS (no los pendientes del modo
+    // edición) para no confirmar cambios que el usuario todavía no guardó.
+    const guardarVerMas = async () => {
+        if (!verMasEdit) return;
+        const { ex, key, incluye, evalua } = verMasEdit;
+        if (contarLineas(incluye) > VERMAS_MAX_ITEMS || contarLineas(evalua) > VERMAS_MAX_ITEMS) return;
+        const detalleJson = textoADetalle(incluye, evalua); // '' = quitar el Ver más
+        setGuardandoVerMas(true);
+        try {
+            await api.savePrecios([{
+                examenId: ex.id,
+                nombre: nombres[key] || ex.nombre,
+                tipoUsuario: ex.tipo,
+                precio: precios[key] !== undefined ? precios[key] : (ex.precio ?? 0),
+                descripcion: descripciones[key] || '',
+                categoria: ex.categoria,
+                detalleJson,
+            }]);
+            setDetalles(d => { const n = { ...d }; if (detalleJson) n[key] = detalleJson; else delete n[key]; return n; });
+            setVerMasEdit(null);
+            setMsg(detalleJson ? '✅ "Ver más" guardado' : '✅ "Ver más" quitado');
+        } catch (e) { setMsg('❌ Error: ' + (e.message || 'No se pudo guardar')); }
+        setGuardandoVerMas(false);
+        setTimeout(() => setMsg(''), 4000);
     };
 
     const deleteExamen = async (examen) => {
@@ -3020,6 +3138,7 @@ const SeccionCatalogo = () => {
                                                 <span className="text-gray-800 text-sm font-medium">{nombreMostrar}</span>
                                                 <span className="text-gray-500 text-xs ml-2">{ex.id}</span>{ex.categoria==='Servicios'&&DESCRIPCIONES_SERVICIOS[ex.id]&&<span className="text-gray-400 text-xs ml-2">· {DESCRIPCIONES_SERVICIOS[ex.id]}</span>}
                                                 {descVal && <span className="text-gray-400 text-xs ml-2">· {descVal}</span>}
+                                                {ex.tipo !== 'medico' && detalles[key] && <span className="ml-2 inline-flex items-center gap-1 bg-cyan-50 text-cyan-700 text-[10px] font-semibold px-1.5 py-0.5 rounded-full align-middle"><i className="fas fa-info-circle"></i>Ver más</span>}
                                             </div>
                                             {modoEdicion ? (
                                                 <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -3041,6 +3160,13 @@ const SeccionCatalogo = () => {
                                                     title="Editar subtítulo"
                                                     className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all flex-shrink-0 ${descEditada?'bg-amber-100 text-amber-600':'bg-indigo-50 hover:bg-indigo-100 text-indigo-500'}`}>
                                                     <i className="fas fa-pencil-alt text-xs"></i>
+                                                </button>
+                                            )}
+                                            {modoEdicion && ex.tipo !== 'medico' && (
+                                                <button onClick={() => abrirVerMas(ex)}
+                                                    title='Editar "Ver más"'
+                                                    className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all flex-shrink-0 ${detalles[key]?'bg-cyan-100 text-cyan-700':'bg-cyan-50 hover:bg-cyan-100 text-cyan-500'}`}>
+                                                    <i className="fas fa-list-check text-xs"></i>
                                                 </button>
                                             )}
                                             {modoEdicion && (
@@ -3070,9 +3196,9 @@ const SeccionCatalogo = () => {
             {showForm && (
                 <ModalPortal>
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-md border border-gray-200 shadow-2xl">
-                        <div className="p-5 border-b border-gray-200 flex items-center justify-between"><h2 className="text-gray-800 font-bold"><i className="fas fa-plus-circle mr-2 text-indigo-600"></i>Nuevo Examen</h2><button onClick={() => setShowForm(false)} className="w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600"><i className="fas fa-times"></i></button></div>
-                        <div className="p-5 space-y-4">
+                    <div className="bg-white rounded-2xl w-full max-w-md border border-gray-200 shadow-2xl flex flex-col" style={{maxHeight:'90vh'}}>
+                        <div className="p-5 border-b border-gray-200 flex items-center justify-between flex-shrink-0"><h2 className="text-gray-800 font-bold"><i className="fas fa-plus-circle mr-2 text-indigo-600"></i>Nuevo Examen</h2><button onClick={() => setShowForm(false)} className="w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600"><i className="fas fa-times"></i></button></div>
+                        <div className="p-5 space-y-4 overflow-y-auto">
                             <div><label className="text-gray-700 text-xs font-medium block mb-1">Tipo de usuario</label><div className="flex gap-2">{[{k:'medico',label:'Médico/Clínica'},{k:'dueno',label:'Dueño'},{k:'ambos',label:'Ambos'}].map(({k,label}) => (<button key={k} onClick={() => setForm(f=>({...f,tipo:k}))} className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all ${form.tipo===k?'bg-indigo-600 text-white':'bg-gray-100 text-gray-700'}`}>{label}</button>))}</div></div>
                             <div><label className="text-gray-700 text-xs font-medium block mb-1">Nombre del examen *</label><input value={form.nombre} onChange={e=>setForm(f=>({...f,nombre:e.target.value}))} placeholder="Ej: Hemograma Completo" className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-800 text-sm focus:border-indigo-500 focus:outline-none"/></div>
                             <div><label className="text-gray-700 text-xs font-medium block mb-1">Categoría *</label><input value={form.categoria} onChange={e=>setForm(f=>({...f,categoria:e.target.value}))} placeholder="Ej: Hematología" list="cats-list" className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-800 text-sm focus:border-indigo-500 focus:outline-none"/><datalist id="cats-list">{[...new Set(CATALOG_DEFAULT.map(e=>e.categoria))].map(c=><option key={c} value={c}/>)}</datalist></div>
@@ -3085,7 +3211,55 @@ const SeccionCatalogo = () => {
                             ) : (
                                 <div><label className="text-gray-700 text-xs font-medium block mb-1">Precio *</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">S/</span><input type="number" min="0" step="0.01" value={form.precio} onChange={e=>setForm(f=>({...f,precio:e.target.value}))} placeholder="0.00" className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-800 text-sm focus:border-indigo-500 focus:outline-none"/></div></div>
                             )}
+                            {form.tipo !== 'medico' && (
+                                <div className="border border-cyan-200 rounded-xl overflow-hidden">
+                                    <button type="button" onClick={() => setForm(f => ({ ...f, verMasOpen: !f.verMasOpen }))}
+                                        className="w-full px-4 py-2.5 bg-cyan-50 flex items-center gap-2 text-left">
+                                        <i className="fas fa-info-circle text-cyan-600 text-sm"></i>
+                                        <span className="text-cyan-800 text-sm font-semibold">Ver más <span className="text-cyan-600 font-normal">(opcional)</span></span>
+                                        {(contarLineas(form.incluye) + contarLineas(form.evalua)) > 0 && <span className="bg-cyan-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">{contarLineas(form.incluye) + contarLineas(form.evalua)}</span>}
+                                        <i className={`fas fa-chevron-${form.verMasOpen ? 'up' : 'down'} text-cyan-600 text-xs ml-auto`}></i>
+                                    </button>
+                                    {form.verMasOpen && (
+                                        <div className="p-4 bg-white">
+                                            <p className="text-gray-500 text-xs mb-3">Lo que ve el dueño al tocar "Ver más" en este examen.</p>
+                                            <CamposVerMas incluye={form.incluye} evalua={form.evalua}
+                                                onIncluye={v => setForm(f => ({ ...f, incluye: v }))}
+                                                onEvalua={v => setForm(f => ({ ...f, evalua: v }))}/>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                             <div className="flex gap-3 pt-1"><button onClick={() => setShowForm(false)} className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-sm font-semibold">Cancelar</button><button onClick={addExamen} disabled={saving} className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold disabled:opacity-50">{saving?'Guardando...':'Agregar'}</button></div>
+                        </div>
+                    </div>
+                </div>
+                </ModalPortal>
+            )}
+
+            {verMasEdit && (
+                <ModalPortal>
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-md border border-gray-200 shadow-2xl flex flex-col" style={{maxHeight:'90vh'}}>
+                        <div className="p-5 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+                            <div className="min-w-0">
+                                <h2 className="text-gray-800 font-bold"><i className="fas fa-info-circle mr-2 text-cyan-600"></i>Ver más</h2>
+                                <p className="text-gray-500 text-xs truncate">{nombres[verMasEdit.key] || verMasEdit.ex.nombre}</p>
+                            </div>
+                            <button onClick={() => setVerMasEdit(null)} className="w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600 flex-shrink-0"><i className="fas fa-times"></i></button>
+                        </div>
+                        <div className="p-5 space-y-4 overflow-y-auto">
+                            <CamposVerMas incluye={verMasEdit.incluye} evalua={verMasEdit.evalua}
+                                onIncluye={v => setVerMasEdit(s => ({ ...s, incluye: v }))}
+                                onEvalua={v => setVerMasEdit(s => ({ ...s, evalua: v }))}/>
+                            <p className="text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs"><i className="fas fa-bolt mr-1"></i>Esto se guarda al toque, aparte del botón "Guardar" del modo edición.</p>
+                            <div className="flex gap-3 pt-1">
+                                <button onClick={() => setVerMasEdit(null)} className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-sm font-semibold">Cancelar</button>
+                                <button onClick={guardarVerMas} disabled={guardandoVerMas || contarLineas(verMasEdit.incluye) > VERMAS_MAX_ITEMS || contarLineas(verMasEdit.evalua) > VERMAS_MAX_ITEMS}
+                                    className="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-sm font-bold disabled:opacity-50">
+                                    {guardandoVerMas ? 'Guardando...' : 'Guardar Ver más'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
