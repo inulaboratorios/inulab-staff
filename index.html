@@ -2093,10 +2093,13 @@ const SeccionPacientes = ({ orders, onSuccess }) => {
 
     const allPets = []; const seen = new Set(); const petLatestDate = {};
     orders.forEach(o => { o.items.forEach(it => { const key = it.pet?.id||it.pet?.name; if (!key) return; if (!petLatestDate[key] || new Date(o.date) > new Date(petLatestDate[key])) petLatestDate[key] = o.date; if (!seen.has(key)) { seen.add(key); allPets.push({...it.pet, ownerClient:o.userName, orderId:o.id}); } }); });
-    // NUEVO — mascotas sin pedidos todavía (p. ej. creadas desde staff), al inicio de la lista
+    // Mascotas sin pedidos todavía (p. ej. creadas desde staff o desde la app).
+    // CAMBIO (09/11/2026) — antes iban al INICIO de la lista y, como no tienen
+    // fecha, parecía que tenían exámenes perdidos. Ahora van AL FINAL. En cuanto
+    // se les hace su primer pedido, pasan solas al grupo de arriba con su fecha.
     const petsSinPedidos = apiPets.filter(p => p.id && !seen.has(p.id));
     const petsConPedidos = allPets;
-    const filtered = [...petsSinPedidos, ...petsConPedidos].filter(p => !search||norm(p.name).includes(norm(search))||norm(p.lastName).includes(norm(search))||norm(p.owner).includes(norm(search))||norm(p.ownerClient).includes(norm(search)));
+    const filtered = [...petsConPedidos, ...petsSinPedidos].filter(p => !search||norm(p.name).includes(norm(search))||norm(p.lastName).includes(norm(search))||norm(p.owner).includes(norm(search))||norm(p.ownerClient).includes(norm(search)));
 
     const mesesP = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
     const diasP = Array.from({length:31},(_,i)=>String(i+1).padStart(2,'0'));
