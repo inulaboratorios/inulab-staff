@@ -1408,6 +1408,11 @@ const TrackingModal = ({ order, onClose, onCommentSaved }) => {
 const OrderCard = ({ order, onStatusChange, onSuccess, highlight, hideRecojo, hideItemActions, hideBilling }) => {
     const [uploadItem, setUploadItem] = useState(null);
     const [sendingItemId, setSendingItemId] = useState(null);
+    // NUEVO — se marca al toque en la tarjeta, sin esperar la recarga completa,
+    // para que el botón desaparezca apenas el servidor confirma y no lo vuelvan a presionar.
+    const [enviadosLocal, setEnviadosLocal] = useState({});
+    const [diferiendo, setDiferiendo] = useState(false);
+    const [diferidoLocal, setDiferidoLocal] = useState(false);
     const [showInvoice, setShowInvoice] = useState(false);
     const [invoiceOrderId, setInvoiceOrderId] = useState(null);
     const [showAssign, setShowAssign] = useState(false);
@@ -1488,7 +1493,7 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight, hideRecojo, hi
                             {!item.pdfData&&!isLegacyCompleted&&<button onClick={()=>canUploadResults&&setUploadItem(item)} disabled={!canUploadResults} title={canUploadResults?"Subir examen":"Dale clic a \"Procesar\", o activa \"Manual\" para subir de una vez"} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0 ${canUploadResults?'bg-orange-100 hover:bg-orange-200 text-orange-600 cursor-pointer':'bg-gray-100 text-gray-300 cursor-not-allowed'}`}><i className="fas fa-file-upload text-xs"></i></button>}
                             {item.pdfData&&<button onClick={()=>setUploadItem(item)} title="Reemplazar PDF de este examen" className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 transition-colors flex-shrink-0"><i className="fas fa-sync-alt text-xs"></i></button>}
                             {item.pdfData&&<button onClick={()=>setShowPdf({url:item.pdfData,title:item.exam?.name,sub:getPetFullName(item.pet),id:order.id,userId:order.userId,clientName:order.userName,examName:item.exam?.name,petName:getPetFullName(item.pet)})} className="w-8 h-8 bg-purple-100 hover:bg-purple-200 rounded-lg flex items-center justify-center text-purple-600 transition-colors flex-shrink-0"><i className="fas fa-eye text-xs"></i></button>}
-                            {item.pdfData&&!item.isSent&&!isLegacyCompleted&&<button onClick={async()=>{setSendingItemId(item.id);try{await api.enviarExamen(order.id,item.id);onSuccess&&onSuccess('✅ Examen enviado al cliente');}catch(e){alert('Error al enviar: '+(e.message||''));}setSendingItemId(null);}} disabled={sendingItemId===item.id} title="Enviar examen al cliente" className="w-8 h-8 bg-emerald-100 hover:bg-emerald-200 rounded-lg flex items-center justify-center text-emerald-600 transition-colors flex-shrink-0 disabled:opacity-50"><i className={`fas ${sendingItemId===item.id?'fa-spinner fa-spin':'fa-paper-plane'} text-xs`}></i></button>}
+                            {item.pdfData&&!item.isSent&&!enviadosLocal[item.id]&&!isLegacyCompleted&&<button onClick={async()=>{if(sendingItemId)return;setSendingItemId(item.id);try{await api.enviarExamen(order.id,item.id);setEnviadosLocal(p=>({...p,[item.id]:true}));onSuccess&&onSuccess('✅ Examen enviado al cliente');}catch(e){alert('Error al enviar: '+(e.message||''));}setSendingItemId(null);}} disabled={!!sendingItemId} title="Enviar examen al cliente" className="w-8 h-8 bg-emerald-100 hover:bg-emerald-200 rounded-lg flex items-center justify-center text-emerald-600 transition-colors flex-shrink-0 disabled:opacity-50"><i className={`fas ${sendingItemId===item.id?'fa-spinner fa-spin':'fa-paper-plane'} text-xs`}></i></button>}
                             {item.isSent&&<span title="Ya enviado al cliente" className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white flex-shrink-0"><i className="fas fa-check text-xs"></i></span>}
                             </>}
                         </div>
@@ -1517,7 +1522,7 @@ const OrderCard = ({ order, onStatusChange, onSuccess, highlight, hideRecojo, hi
                     {['moto_en_camino','moto_arrived','pickup_in_progress','sample_received','arrived_at_lab'].includes(order.status)&&manualMode&&(()=>{const nm={moto_en_camino:'moto_arrived',moto_arrived:'sample_received',pickup_in_progress:'sample_received',sample_received:'arrived_at_lab',arrived_at_lab:'processing'};const nl={moto_en_camino:'Llegó a destino',moto_arrived:'Muestra recogida',pickup_in_progress:'Muestra recogida',sample_received:'Llegó al lab',arrived_at_lab:'Procesar'};const ni={moto_en_camino:'fa-home',moto_arrived:'fa-arrow-right',pickup_in_progress:'fa-arrow-right',sample_received:'fa-arrow-right',arrived_at_lab:'fa-arrow-right'};return(<button onClick={()=>onStatusChange(order.id,nm[order.status])} title={nl[order.status]} className="w-8 h-8 md:w-auto md:h-auto flex items-center justify-center md:px-3 md:py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-semibold transition-colors"><i className={`fas ${ni[order.status]} md:mr-1`}></i><span className="hidden md:inline">{nl[order.status]}</span></button>);})()}
                     {order.status==='arrived_at_lab'&&!manualMode&&<button onClick={()=>onStatusChange(order.id,'processing')} title="Procesar" className="w-8 h-8 md:w-auto md:h-auto flex items-center justify-center md:px-3 md:py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-semibold transition-colors"><i className="fas fa-flask md:mr-1"></i><span className="hidden md:inline">Procesar</span></button>}
                     {!hideBilling&&order.status==='completed'&&!order.invoicePdf&&<button onClick={()=>{setInvoiceOrderId(order.id);setShowInvoice(true);}} title="Subir facturación" className="w-8 h-8 md:w-auto md:h-auto flex items-center justify-center md:px-3 md:py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-semibold transition-colors"><i className="fas fa-receipt md:mr-1"></i><span className="hidden md:inline">Subir facturación</span></button>}
-                    {!hideBilling&&order.status==='completed'&&!order.invoicePdf&&(!order.estadoFacturacion||order.estadoFacturacion==='normal')&&<button onClick={async()=>{if(confirm('¿Diferir este pedido para factura consolidada?')){await api.diferirPedido(order.id);onSuccess&&onSuccess('✅ Pedido diferido para factura consolidada');}}} title="Diferir para factura consolidada" className="w-8 h-8 md:w-auto md:h-auto flex items-center justify-center md:px-3 md:py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-semibold transition-colors"><i className="fas fa-layer-group md:mr-1"></i><span className="hidden md:inline">Diferir para factura consolidada</span></button>}
+                    {!hideBilling&&!diferidoLocal&&order.status==='completed'&&!order.invoicePdf&&(!order.estadoFacturacion||order.estadoFacturacion==='normal')&&<button disabled={diferiendo} onClick={async()=>{if(diferiendo)return;if(confirm('¿Diferir este pedido para factura consolidada?')){setDiferiendo(true);try{await api.diferirPedido(order.id);setDiferidoLocal(true);onSuccess&&onSuccess('✅ Pedido diferido para factura consolidada');}catch(e){alert('Error al diferir: '+(e.message||''));}setDiferiendo(false);}}} title="Diferir para factura consolidada" className="w-8 h-8 md:w-auto md:h-auto flex items-center justify-center md:px-3 md:py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-semibold transition-colors disabled:opacity-60"><i className={`fas ${diferiendo?'fa-spinner fa-spin':'fa-layer-group'} md:mr-1`}></i><span className="hidden md:inline">{diferiendo?'Difiriendo...':'Diferir para factura consolidada'}</span></button>}
                     {!hideBilling&&order.estadoFacturacion==='por_consolidar'&&<span className="px-3 py-1.5 bg-violet-100 text-violet-700 rounded-lg text-xs font-semibold"><i className="fas fa-layer-group mr-1"></i>Por consolidar</span>}
                     {!hideBilling&&order.estadoFacturacion==='consolidado'&&<span className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-semibold"><i className="fas fa-check-circle mr-1"></i>Consolidado</span>}
                     {!hideBilling&&order.status==='completed'&&order.invoicePdf&&<button onClick={()=>{setInvoiceOrderId(order.id);setShowInvoice(true);}} title="Re-subir facturación" className="w-8 h-8 md:w-auto md:h-auto flex items-center justify-center md:px-3 md:py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-semibold transition-colors"><i className="fas fa-receipt md:mr-1"></i><span className="hidden md:inline">Re-subir facturación</span></button>}
@@ -3676,7 +3681,15 @@ const App = () => {
         else { setLoading(false); }
     }, []);
 
-    useEffect(() => { if (!auth) return; const t = setInterval(loadOrders, 5000); return () => clearInterval(t); }, [auth]);
+    // NUEVO — refresco cada 15s (antes 5s) y solo si la pestaña está a la vista.
+    // Al volver a la pestaña se refresca al toque.
+    useEffect(() => {
+        if (!auth) return;
+        const t = setInterval(() => { if (!document.hidden) loadOrders(); }, 15000);
+        const alVolver = () => { if (!document.hidden) loadOrders(); };
+        document.addEventListener('visibilitychange', alVolver);
+        return () => { clearInterval(t); document.removeEventListener('visibilitychange', alVolver); };
+    }, [auth]);
 
     // Notificaciones de pedidos nuevos: apenas hay sesión activa, se marca el
     // "punto de partida" con la hora del SERVIDOR (no la del navegador, que
@@ -3777,7 +3790,23 @@ const App = () => {
     // Pedidos lo use de entrada; "orders" (el que ve el resto de la app) se
     // actualiza una sola vez, cuando llega el historial completo — igual que
     // antes, sin parpadeos en Inicio/Pacientes/Resultados/Facturación.
+    // NUEVO (09/11/2026) — antes cada 5 segundos se lanzaba una carga de TODOS
+    // los pedidos aunque la anterior no hubiera terminado. Con cientos de
+    // pedidos cada carga demora, las cargas se apilaban, el servidor se ponía
+    // lento y los botones "no reaccionaban". Ahora: nunca hay dos cargas a la
+    // vez; si piden otra mientras una está en curso, se hace UNA más al terminar.
+    const cargandoOrdersRef = useRef(false);
+    const recargarDespuesRef = useRef(false);
     const loadOrders = async () => {
+        if (cargandoOrdersRef.current) { recargarDespuesRef.current = true; return; }
+        cargandoOrdersRef.current = true;
+        try { await loadOrdersReal(); }
+        finally {
+            cargandoOrdersRef.current = false;
+            if (recargarDespuesRef.current) { recargarDespuesRef.current = false; loadOrders(); }
+        }
+    };
+    const loadOrdersReal = async () => {
         try {
             const dataPending = await api.getOrdersPending();
             const rawPending = Array.isArray(dataPending) ? dataPending : (dataPending.orders || []);
@@ -3802,9 +3831,26 @@ const App = () => {
 
     const handleLogout = () => { localStorage.removeItem('inulab_token'); setAuth(false); setUser(null); setOrders([]); setView('pedidos'); setUsername(''); setPassword(''); };
 
+    // NUEVO — antes se esperaba a recargar TODOS los pedidos antes de mostrar
+    // el cambio (varios segundos), así que parecía que el botón no hacía nada y
+    // le volvían a dar clic. Ahora: mientras se guarda, la pantalla muestra
+    // "Procesando..." y no acepta otro clic; apenas el servidor confirma, la
+    // tarjeta cambia al toque y la recarga completa sigue por detrás.
+    const [procesando, setProcesando] = useState(false);
+    const procesandoRef = useRef(false);
     const handleStatusChange = async (id, status) => {
-        try { await api.updateStatus(id, status); await loadOrders(); setSuccess('✅ Estado actualizado'); setTimeout(() => setSuccess(''), 3000); }
+        if (procesandoRef.current) return;
+        procesandoRef.current = true; setProcesando(true);
+        try {
+            await api.updateStatus(id, status);
+            const cambiar = o => o.id === id ? { ...o, status } : o;
+            setOrders(prev => prev.map(cambiar));
+            setPendingPreview(prev => prev ? prev.map(cambiar) : prev);
+            setSuccess('✅ Estado actualizado'); setTimeout(() => setSuccess(''), 3000);
+            loadOrders();
+        }
         catch (e) { setSuccess('❌ Error: ' + e.message); setTimeout(() => setSuccess(''), 4000); }
+        finally { procesandoRef.current = false; setProcesando(false); }
     };
 
     if (loading) return (<div className="flex items-center justify-center bg-gray-50" style={{position:'fixed',inset:0,height:'100dvh',overflow:'hidden'}}><div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-4 border-cyan-500 border-t-transparent mx-auto mb-4"></div><p className="text-gray-600 text-sm">Iniciando...</p></div></div>);
@@ -3833,7 +3879,15 @@ const App = () => {
         </div>
     );
     const isMotorizado = user?.role === 'motorizado' || user?.type === 'motorizado';
-    if (isMotorizado) return <VistaMoto orders={orders} currentUser={user} onStatusChange={handleStatusChange} onLogout={handleLogout} success={motoSuccess} setSuccess={setMotoSuccess}/>;
+    const overlayProcesando = procesando && (
+        <div style={{position:'fixed',inset:0,zIndex:9999,cursor:'wait'}}>
+            <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm font-semibold px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+                <i className="fas fa-spinner fa-spin"></i>Procesando...
+            </div>
+        </div>
+    );
+
+    if (isMotorizado) return <>{overlayProcesando}<VistaMoto orders={orders} currentUser={user} onStatusChange={handleStatusChange} onLogout={handleLogout} success={motoSuccess} setSuccess={setMotoSuccess}/></>;
 
     const pendingCount = orders.filter(o => o.status !== 'completed').length;
     const NAV = [
@@ -3848,6 +3902,7 @@ const App = () => {
 
     return (
         <div className="bg-gray-100 flex flex-col" style={{height:'100dvh',overflow:'hidden'}}>
+            {overlayProcesando}
             {nuevoPedidoAlerta && (
                 <div className="fixed top-4 right-4 z-50 bg-white border border-cyan-200 shadow-lg rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer animate-pulse"
                      style={{maxWidth:'320px'}}
