@@ -2440,11 +2440,13 @@ const SeccionPorConsolidar = ({ onSuccess, onBack }) => {
 
     const cargarClientes = async () => {
         setLoading(true);
+        let data = null;
         try {
-            const data = await api.getPorConsolidar();
+            data = await api.getPorConsolidar();
             setClientes(data);
         } catch(e) { setMsg('Error cargando pedidos'); }
         setLoading(false);
+        return data; // NUEVO — devuelve la lista fresca para refrescar la pantalla de pedidos
     };
 
     const handleConsolidar = async () => {
@@ -2459,12 +2461,18 @@ const SeccionPorConsolidar = ({ onSuccess, onBack }) => {
             setShowModal(false);
             setFile(null);
             setPedidosSeleccionados([]);
-            await cargarClientes();
+            // FIX (10/11/2026) — antes la pantalla de pedidos seguía mostrando la
+            // lista VIEJA del cliente (la que se cargó al entrar), así que los
+            // pedidos recién consolidados "volvían a aparecer" aunque sí se
+            // habían guardado. Ahora se usa la lista fresca del servidor.
+            const fresca = await cargarClientes();
             if (clienteSeleccionado) {
-                const updated = clientes.find(c => c.userId === clienteSeleccionado.userId);
-                if (!updated || updated.totalPedidos === 0) {
+                const updated = (fresca || []).find(c => c.userId === clienteSeleccionado.userId);
+                if (!updated || !(updated.pedidos || []).length) {
                     setNivel(2);
                     setClienteSeleccionado(null);
+                } else {
+                    setClienteSeleccionado(updated);
                 }
             }
             onSuccess && onSuccess('✅ Factura consolidada emitida correctamente');
