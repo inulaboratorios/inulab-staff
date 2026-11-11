@@ -2064,6 +2064,11 @@ const SeccionPedidos = ({ orders, onStatusChange, onSuccess, onRefresh }) => {
 const SeccionPacientes = ({ orders, onSuccess }) => {
     // ALL hooks at top - no conditions before hooks
     const [search, setSearch] = useState('');
+    // FIX (11/11/2026) — buscador PROPIO para los exámenes dentro del paciente.
+    // Antes usaba el mismo texto que el buscador de la lista: si buscabas
+    // "Sien" para encontrar a Sienna Lazo y la abrías, filtraba sus exámenes
+    // por "Sien" y salía "Sin exámenes" aunque sí tenía.
+    const [searchExam, setSearchExam] = useState('');
     // NUEVO — crear paciente desde staff
     const [showCrear, setShowCrear] = useState(false);
     const [apiPets, setApiPets] = useState([]);
@@ -2137,7 +2142,7 @@ const SeccionPacientes = ({ orders, onSuccess }) => {
 
         const filteredExams = exams.filter(ex => {
             const d = new Date(ex.orderDate);
-            if (search && !norm(ex.exam?.name).includes(norm(search))) return false;
+            if (searchExam && !norm(ex.exam?.name).includes(norm(searchExam))) return false;
             if (filterDay && String(d.getDate()).padStart(2,'0') !== filterDay) return false;
             if (filterMonth && String(d.getMonth()+1).padStart(2,'0') !== filterMonth) return false;
             if (filterYear && String(d.getFullYear()) !== filterYear) return false;
@@ -2150,7 +2155,7 @@ const SeccionPacientes = ({ orders, onSuccess }) => {
             <div className="flex flex-col h-full">
                 <div className="flex-shrink-0 bg-white border-b border-gray-200 p-4">
                     <div className="flex items-center gap-3 mb-3">
-                        <button onClick={()=>{setSelPet(null);setFilterDay('');setFilterMonth('');setFilterYear('');}} className="w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600 transition-colors">
+                        <button onClick={()=>{setSelPet(null);setSearchExam('');setFilterDay('');setFilterMonth('');setFilterYear('');}} className="w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600 transition-colors">
                             <i className="fas fa-arrow-left text-sm"></i>
                         </button>
                         {/* CAMBIO — en celular el ícono grande ocupaba mucho espacio: se oculta aquí y se
@@ -2175,7 +2180,7 @@ const SeccionPacientes = ({ orders, onSuccess }) => {
                     <div className="flex flex-col md:flex-row md:items-center gap-2">
                         <div className="relative md:flex-1 md:min-w-36">
                             <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar examen..." className="w-full pl-8 pr-3 py-1.5 md:py-2 rounded-xl bg-gray-50 border border-gray-200 text-xs md:text-sm text-gray-700 focus:border-cyan-400 focus:outline-none"/>
+                            <input value={searchExam} onChange={e=>setSearchExam(e.target.value)} placeholder="Buscar examen..." className="w-full pl-8 pr-3 py-1.5 md:py-2 rounded-xl bg-gray-50 border border-gray-200 text-xs md:text-sm text-gray-700 focus:border-cyan-400 focus:outline-none"/>
                         </div>
                         <span className="hidden md:inline text-xs text-gray-400">Filtrar por:</span>
                         <div className="grid grid-cols-3 gap-2 md:flex md:gap-2">
@@ -2273,7 +2278,7 @@ const SeccionPacientes = ({ orders, onSuccess }) => {
                 ):(
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pb-6">
                         {filteredWithDate.map((p,i)=>(
-                            <div key={i} onClick={()=>setSelPet(p)}
+                            <div key={i} onClick={()=>{setSearchExam('');setSelPet(p);}}
                                 className="bg-white rounded-2xl p-5 border border-gray-200 cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all">
                                 {petLatestDate[p.id||p.name]&&<p className="text-xs text-gray-400 mb-3">{limaDate(petLatestDate[p.id||p.name]).toLocaleDateString('es-PE',{day:'numeric',month:'long',year:'numeric'})}</p>}
                                 <div className="flex items-center gap-4">
