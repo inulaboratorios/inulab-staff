@@ -3813,6 +3813,11 @@ const App = () => {
     // vez; si piden otra mientras una está en curso, se hace UNA más al terminar.
     const cargandoOrdersRef = useRef(false);
     const recargarDespuesRef = useRef(false);
+    // NUEVO (12/11/2026) — cuenta los cambios hechos desde staff. Si una carga
+    // de pedidos EMPEZÓ antes de un cambio, trae datos viejos: se descarta y se
+    // pide otra. Antes esa carga vieja pisaba el cambio y el pedido "volvía al
+    // estado anterior" (se notaba sobre todo en modo Manual).
+    const cambiosRef = useRef(0);
     const loadOrders = async () => {
         if (cargandoOrdersRef.current) { recargarDespuesRef.current = true; return; }
         cargandoOrdersRef.current = true;
@@ -3823,14 +3828,21 @@ const App = () => {
         }
     };
     const loadOrdersReal = async () => {
+        const version = cambiosRef.current;
+        const vieja = () => {
+            if (cambiosRef.current !== version) { recargarDespuesRef.current = true; return true; }
+            return false;
+        };
         try {
             const dataPending = await api.getOrdersPending();
             const rawPending = Array.isArray(dataPending) ? dataPending : (dataPending.orders || []);
+            if (vieja()) return;
             setPendingPreview(rawPending.map(normalizeOrder));
         } catch (e) { console.error('Error cargando pedidos pendientes:', e.message); }
         try {
             const data = await api.getOrders();
             const raw = Array.isArray(data) ? data : (data.orders || []);
+            if (vieja()) return;
             setOrders(raw.map(normalizeOrder));
             setPendingPreview(null);
         } catch (e) { console.error('Error cargando pedidos:', e.message); }
@@ -3859,6 +3871,7 @@ const App = () => {
         procesandoRef.current = true; setProcesando(true);
         try {
             await api.updateStatus(id, status);
+            cambiosRef.current++;
             const cambiar = o => o.id === id ? { ...o, status } : o;
             setOrders(prev => prev.map(cambiar));
             setPendingPreview(prev => prev ? prev.map(cambiar) : prev);
