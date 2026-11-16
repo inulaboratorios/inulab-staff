@@ -2431,8 +2431,19 @@ const SeccionResultados = ({ orders }) => {
 
 
 
-const SeccionPorConsolidar = ({ onSuccess, onBack }) => {
+const SeccionPorConsolidar = ({ onSuccess, onBack, orders = [] }) => {
     const [nivel, setNivel] = React.useState(2); // 2=clientes, 3=pedidos
+    // NUEVO (16/11/2026) — RUC del cliente junto a su nombre (pedido de Omar).
+    // Se toma del RUC que el cliente puso en sus pedidos (billingIdentifierValue);
+    // si usó más de uno, se muestran todos.
+    const rucDe = (c) => {
+        const porId = {};
+        (orders || []).forEach(o => { porId[o.id] = o; });
+        const rucs = [...new Set((c?.pedidos || [])
+            .map(p => porId[p.id || p.Id]?.billingIdentifierValue)
+            .filter(v => v && String(v).trim().length === 11))];
+        return rucs.join(', ');
+    };
     const [clientes, setClientes] = React.useState([]);
     const [clienteSeleccionado, setClienteSeleccionado] = React.useState(null);
     const [pedidosSeleccionados, setPedidosSeleccionados] = React.useState([]);
@@ -2521,7 +2532,7 @@ const SeccionPorConsolidar = ({ onSuccess, onBack }) => {
                         <div key={c.userId} onClick={()=>{setClienteSeleccionado(c);setPedidosSeleccionados([]);setNivel(3);}} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow flex items-center gap-3">
                             <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center"><i className="fas fa-user text-violet-600"></i></div>
                             <div className="flex-1">
-                                <p className="font-semibold text-gray-800">{c.userName}</p>
+                                <p className="font-semibold text-gray-800">{c.userName}{rucDe(c) && <span className="text-gray-500 font-normal text-xs ml-2">RUC: {rucDe(c)}</span>}</p>
                                 <p className="text-gray-500 text-xs">{c.email}</p>
                             </div>
                             <span className="bg-violet-100 text-violet-700 text-xs font-bold px-2 py-1 rounded-lg">{c.totalPedidos} pedido{c.totalPedidos!==1?'s':''}</span>
@@ -2541,7 +2552,7 @@ const SeccionPorConsolidar = ({ onSuccess, onBack }) => {
                 <div className="flex-shrink-0 bg-white border-b border-gray-200 p-4 flex items-center gap-3">
                     <button onClick={()=>{setNivel(2);setPedidosSeleccionados([]);}} className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600"><i className="fas fa-arrow-left text-sm"></i></button>
                     <div>
-                        <p className="text-gray-800 font-semibold text-sm">{clienteSeleccionado.userName}</p>
+                        <p className="text-gray-800 font-semibold text-sm">{clienteSeleccionado.userName}{rucDe(clienteSeleccionado) && <span className="text-gray-500 font-normal text-xs ml-2">RUC: {rucDe(clienteSeleccionado)}</span>}</p>
                         <p className="text-violet-600 text-xs">{pedidos.length} pedido{pedidos.length!==1?'s':''} por consolidar</p>
                     </div>
                     {pedidosSeleccionados.length > 0 && (
@@ -2570,7 +2581,7 @@ const SeccionPorConsolidar = ({ onSuccess, onBack }) => {
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200] p-4">
                         <div className="bg-white rounded-2xl w-full max-w-md border border-gray-200 shadow-2xl">
                             <div className="p-5 border-b border-gray-200 flex items-center justify-between">
-                                <div><h2 className="text-gray-800 font-bold">Consolidar en factura</h2><p className="text-gray-600 text-sm">{clienteSeleccionado.userName} · {pedidosSeleccionados.length} pedido{pedidosSeleccionados.length!==1?'s':''}</p></div>
+                                <div><h2 className="text-gray-800 font-bold">Consolidar en factura</h2><p className="text-gray-600 text-sm">{clienteSeleccionado.userName}{rucDe(clienteSeleccionado) ? ` · RUC ${rucDe(clienteSeleccionado)}` : ''} · {pedidosSeleccionados.length} pedido{pedidosSeleccionados.length!==1?'s':''}</p></div>
                                 <button onClick={()=>{setShowModal(false);setFile(null);setMsg('');}} className="w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600"><i className="fas fa-times"></i></button>
                             </div>
                             <div className="p-5 space-y-4">
@@ -2636,7 +2647,7 @@ const SeccionFacturacion = ({ orders, onRefresh, onStatusChange, onSuccess }) =>
 
     const anyFilter = search || filterDay || filterMonth || filterYear;
 
-    if (subSeccion === 'por_consolidar') return <SeccionPorConsolidar onBack={()=>setSubSeccion('comprobantes')} onSuccess={(msg)=>{setSubSeccion('comprobantes');onRefresh&&onRefresh(msg);}}/>;
+    if (subSeccion === 'por_consolidar') return <SeccionPorConsolidar orders={orders} onBack={()=>setSubSeccion('comprobantes')} onSuccess={(msg)=>{setSubSeccion('comprobantes');onRefresh&&onRefresh(msg);}}/>;
 
     return (
         <div className="flex flex-col h-full relative">
